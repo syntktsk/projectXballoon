@@ -1,0 +1,12 @@
+{
+    "ws_host": "localhost",
+    "ws_port": "8080",
+    "title": "ProjectX Balloon QuickLook",
+    "ti_scaling": 64,
+    "schema_list": {
+        "Main": {
+            "GNSS": "user_data/schema/GNSS/gnss.js",
+            "HK":"user_data/schema/HK/hk.js"
+        }
+    }
+}

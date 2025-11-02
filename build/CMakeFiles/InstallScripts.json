@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/syn/ANLNext/balloon/build/cmake_install.cmake",
+		"/Users/syn/ANLNext/balloon/build/rubyext/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
