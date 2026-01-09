@@ -3,15 +3,18 @@ set(TARGET_EXT_LIBRARY Balloon)
 set(SWIG_IF_FILE ${TARGET_EXT_LIBRARY}.i)
 set(CLASS_LIST_FILE class_list_${TARGET_EXT_LIBRARY}.hh)
 set(RUBY_EXT_INCLUDE_DIRS
-  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/source/core/include
+  ${CMAKE_SOURCE_DIR}/source/modules/include
   ${ANLNEXT_INC_DIR}
   )
 set(RUBY_EXT_LIBRARY_DIRS
   ${ANLNEXT_LIB_DIR}
   )
 set(RUBY_EXT_LIBRARIES
+  BACSBalloon
   ${ANLNEXT_LIB}
-  ProjectXBalloon
+  /usr/lib/libpigpiod_if2.so
+  rt
   )
 
 include_directories(${Boost_INCLUDE_DIRS}) #追加した

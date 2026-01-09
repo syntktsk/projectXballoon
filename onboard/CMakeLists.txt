@@ -11,9 +11,10 @@ set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 ### Definition of project
-project(ProjectXBalloon)
+project(BACSBalloon)
+set(RUBY_CONFIG_FILE_DIR "/usr/include/aarch64-linux-gnu/ruby-3.1.0" CACHE PATH "Ruby config dir")
 set(CMAKE_CXX_STANDARD 17)
-set(MY_LIBRARY ProjectXBalloon)
+set(MY_LIBRARY BACSBalloon)
 set(USE_RUBY ON)
 message("-- Install destination prefix: ${CMAKE_INSTALL_PREFIX}")
 list(APPEND CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
@@ -24,8 +25,9 @@ list(APPEND CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 # message("-- mongocxx_LIBRARIES: ${mongocxx_LIBRARIES}")
 
 # MongoDBのインクルードパスを手動で設定
-set(MONGOCXX_INC_DIR "/opt/homebrew/include")
-set(MONGOCXX_LIB_DIR "/opt/homebrew/lib")
+set(MONGOCXX_INC_DIR "/usr/local/include/bsoncxx/v_noabi")
+set(MONGOCXX_INC_DIR_2 "/usr/local/include/mongocxx/v_noabi")
+set(MONGOCXX_LIB_DIR "/usr/local/lib")
 
 ### BOOST ###
 find_package(Boost CONFIG 1.80.0)
@@ -35,7 +37,6 @@ set(BOOST_LIB ${Boost_LIBRARIES})
 message("-- BOOST_INC_DIR: ${BOOST_INC_DIR}")
 message("-- BOOST_LIB_DIR: ${BOOST_LIB_DIR}")
 message("-- BOOST_LIB: ${BOOST_LIB}")
-
 ### ANL ###
 if(NOT DEFINED ANLNEXT_INSTALL)
   if(DEFINED ENV{ANLNEXT_INSTALL})
@@ -50,16 +51,14 @@ set(ANLNEXT_LIB ANLNext)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ANLNEXT_LIB_DIR}/anlnext)
 message("-- ANLNEXT_INSTALL = ${ANLNEXT_INSTALL}")
 
-# add_definitions(-DANL_USE_TVECTOR -DANL_USE_HEPVECTOR)
-
 ### HSQUICKLOOK ###
 if(GB_USE_HSQUICKLOOK)
   find_path(HSQUICKLOOK_INC_DIR
     NAMES hsquicklook/DocumentBuilder.hh
-    PATHS $ENV{HSQUICKLOOK_INSTALL}/include /usr/local/include $ENV{HOME}/include)
+    PATHS $ENV{HSQUICKLOOK_INSTALL}/analyzer/source/include $ENV{HOME}/include /usr/local/include)
   find_library(HSQUICKLOOK_LIB
     NAMES HSQuickLookAnalyzer
-    PATHS $ENV{HSQUICKLOOK_INSTALL}/lib /usr/local/lib $ENV{HOME}/lib)
+    PATHS $ENV{HOME}/lib $ENV{HSQUICKLOOK_INSTALL}/analyzer/lib /usr/local/lib )
   message("-- HSQUICKLOOK_INC_DIR: ${HSQUICKLOOK_INC_DIR}")
   message("-- HSQUICKLOOK_LIB: ${HSQUICKLOOK_LIB}")
 
@@ -71,10 +70,11 @@ endif(GB_USE_HSQUICKLOOK)
 include_directories(
   include
   ${ANLNEXT_INC_DIR}
-  ${Boost_INCLUDE_DIR}
-  ${MONGOCXX_INC_DIR}/bsoncxx/v_noabi/
-  ${MONGOCXX_INC_DIR}/mongocxx/v_noabi/
-  )
+  ${Boost_INCLUDE_DIRS}
+  /usr/local/include/mongocxx/v_noabi
+  /usr/local/include/bsoncxx/v_noabi
+  /usr/local/include
+)
 
 link_directories(
   ${ANLNEXT_LIB_DIR}
@@ -82,31 +82,49 @@ link_directories(
   ${MONGOCXX_LIB_DIR}
   )
 
-set(ANL_MODULES
-    src/MongoDBClient.cc
-    src/TelemetryReceiver.cc
-    src/TelemetryReceiver_UDP.cc
-    src/WaitFor.cc
-  )
+# set(ANL_MODULES
+#     onboard/source/modules/src/ReceiveCommand.cc
+# 	onboard/source/modules/src/SPIManager.cc
+# 	onboard/source/modules/src/SendTelemetry.cc
+# 	onboard/source/modules/src/ShutdownSystem.cc
+# 	onboard/source/modules/src/SPIManager.cc
+# 	onboard/source/modules/src/SPIManager.cc
+#     # ここに実際に存在する .cc ファイルを並べる
+# )
 
-file(GLOB ANL_MODULES "src/*.cc")
+# add_library(${MY_LIBRARY} SHARED
+#     ${ANL_MODULES}
+# )
 
+file(GLOB ANL_MODULES 
+    "source/core/src/*.cc"
+    "source/modules/src/*.cc"
+)
+
+# これで ANL_MODULES に TelemetryDefinition.cc などが入るはずです
 add_library(${MY_LIBRARY} SHARED
-  ${ANL_MODULES}
+    ${ANL_MODULES}
 )
 
 target_include_directories(${MY_LIBRARY} PUBLIC
+  "source/core/include"        # これが必要！
+  "source/modules/include"     # これも必要！
   ${Boost_INCLUDE_DIRS}
-  ${MONGOCXX_INC_DIR}/bsoncxx/v_noabi/bsoncxx
-  ${MONGOCXX_INC_DIR}/mongocxx/v_noabi/mongocxx
+  ${MONGOCXX_INC_DIR}
 )
 
-target_link_libraries(${MY_LIBRARY}
+target_link_libraries(${MY_LIBRARY} PUBLIC
+  -Wl,--no-as-needed
+  /usr/lib/libpigpiod_if2.so
+  /home/syn/lib/libHSQuickLookAnalyzer.so
+  ${HSQUICKLOOK_LIB}
   ANLNext
   ${Boost_LIBRARIES}
   mongocxx
   bsoncxx
-  )
+  rt
+  -Wl,--as-needed
+)
 
 install(TARGETS ${MY_LIBRARY} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 

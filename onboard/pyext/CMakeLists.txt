@@ -3,7 +3,8 @@ set(TARGET_EXT_LIBRARY Balloon)
 set(SWIG_IF_FILE ${TARGET_EXT_LIBRARY}.i)
 set(CLASS_LIST_FILE class_list_${TARGET_EXT_LIBRARY}.hh)
 set(PYTHON_EXT_INCLUDE_DIRS
-  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/source/core/include
+  ${CMAKE_SOURCE_DIR}/source/modules/include
   ${ANLNEXT_INC_DIR}
   )
 set(PYTHON_EXT_LIBRARY_DIRS

@@ -32,7 +32,7 @@ require 'mime/types'
 ### QL definition
 ######################################################################
 DefaultWSPort = 8080
-DefaultDBName = "ProjectX"
+DefaultDBName = "BACS"
 DefaultDBHost = "localhost"
 DefaultDBPort = 27017
 ######################################################################

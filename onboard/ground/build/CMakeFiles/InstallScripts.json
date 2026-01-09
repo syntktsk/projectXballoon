@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/syn/balloon/onboard/ground/build/cmake_install.cmake",
+		"/Users/syn/balloon/onboard/ground/build/rubyext/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

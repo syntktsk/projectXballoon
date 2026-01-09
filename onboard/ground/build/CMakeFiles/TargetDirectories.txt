@@ -1,0 +1,15 @@
+/Users/syn/balloon/onboard/ground/build/CMakeFiles/BACSMonitor.dir
+/Users/syn/balloon/onboard/ground/build/CMakeFiles/edit_cache.dir
+/Users/syn/balloon/onboard/ground/build/CMakeFiles/rebuild_cache.dir
+/Users/syn/balloon/onboard/ground/build/CMakeFiles/list_install_components.dir
+/Users/syn/balloon/onboard/ground/build/CMakeFiles/install.dir
+/Users/syn/balloon/onboard/ground/build/CMakeFiles/install/local.dir
+/Users/syn/balloon/onboard/ground/build/CMakeFiles/install/strip.dir
+/Users/syn/balloon/onboard/ground/build/rubyext/CMakeFiles/Balloon.dir
+/Users/syn/balloon/onboard/ground/build/rubyext/CMakeFiles/Balloon_swig_compilation.dir
+/Users/syn/balloon/onboard/ground/build/rubyext/CMakeFiles/edit_cache.dir
+/Users/syn/balloon/onboard/ground/build/rubyext/CMakeFiles/rebuild_cache.dir
+/Users/syn/balloon/onboard/ground/build/rubyext/CMakeFiles/list_install_components.dir
+/Users/syn/balloon/onboard/ground/build/rubyext/CMakeFiles/install.dir
+/Users/syn/balloon/onboard/ground/build/rubyext/CMakeFiles/install/local.dir
+/Users/syn/balloon/onboard/ground/build/rubyext/CMakeFiles/install/strip.dir
