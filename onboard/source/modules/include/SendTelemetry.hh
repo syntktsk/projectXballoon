@@ -12,9 +12,7 @@
 #include <anlnext/BasicModule.hh>
 #include "TelemetryDefinition.hh"
 #include "ErrorManager.hh"
-// #include "MeasureTemperatureWithRTDSensor.hh"
 #include "GetRaspiStatus.hh"
-// #include "GetEnvironmentalData.hh"
 #include "SerialCommunication.hh"
 #include "SocketTransceiver.hh"
 #include "ReceiveCommand.hh"
@@ -51,6 +49,7 @@ public:
   void inputInfo();
   void inputDetectorInfo();
   void inputHKVesselInfo();
+  void inputGL860Option();
   void inputSoftwareInfo();
   void inputStatusInfo();
   void inputEUInfo();
@@ -68,7 +67,7 @@ private:
   std::string binaryFilenameBase_ = "";
 
   int numTelemPerFile_ = 1000;
-  static constexpr int sleepms_ = 500;
+  static constexpr int sleepms_ = 10;
   int wfDivisionCounter_ = 0;
   int chatter_ = 0;
 

@@ -60,16 +60,33 @@ ANLStatus ReceiveTelemetry::mod_analyze()
   std::vector<uint8_t> dummy_data; 
   const std::vector<uint8_t>* data_ptr = &dummy_data;
 
+  fd_set fdset;
+  timeval timeout;
+  timeout.tv_sec = 10;
+  timeout.tv_usec = 0;
+  FD_ZERO(&fdset);
+
   if (communicationType_ == "serial"){
-    // ... (シリアル処理はそのまま) ...
-    // ※シリアルの場合は buffer_ を使うので、後述のループ条件を調整
-    // ここでは socket 側の修正を優先します
+    FD_SET(sc_->FD(), &fdset);
+    int rv = select(sc_->FD() + 1, &fdset, NULL, NULL, &timeout);
+    if (rv == -1) {
+      std::cerr << "Error in ReceiveTelemetry::mod_analyze: rv = -1" << std::endl;
+      valid_ = false;
+      return AS_ERROR;
+    }
+    if (rv == 0) {
+      std::cout << "Time out(serial)" << std::endl;
+      valid_ = false;
+      return AS_OK;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    byte_read = sc_->sread(buffer_, maxTelemetry_);
+    if (byte_read == -1) {
+      std::cerr << "Read command failed in ReceiveTelemetry::mod_analyze: byte_read = " << byte_read << std::endl;
+      return AS_OK;
+    }
   } else if (communicationType_ == "socket") {
-    fd_set fdset;
-    timeval timeout;
-    timeout.tv_sec = 10;
-    timeout.tv_usec = 0;
-    FD_ZERO(&fdset);
+
     FD_SET(ou_->FD(), &fdset);
 
     int rv = select(ou_->FD() + 1, &fdset, NULL, NULL, &timeout);
@@ -98,26 +115,7 @@ ANLStatus ReceiveTelemetry::mod_analyze()
     return AS_ERROR;
   }
 
-  // --- データのパースループ ---
-  // data_ptr を使うことで、エラーを回避します
-  const std::vector<uint8_t>& received_data = *data_ptr; 
-  if (byte_read > 0) {
-    std::cout << "--- RAW DATA RECEIVE (Before Interpret) ---" << std::endl;
-    std::cout << "Byte Read: " << byte_read << std::endl;
-
-    // --- ここから追加 ---
-    std::cout << "Data (Hex): ";
-    for (int i = 0; i < byte_read; ++i) {
-        // 各バイトを2桁の16進数で表示
-        printf("%02x ", received_data[i]); 
-        
-        // 16バイトごとに改行して見やすくする場合（お好みで）
-        if ((i + 1) % 16 == 0) std::cout << "\n            ";
-    }
-    std::cout << std::dec << std::endl; // 10進数表示に戻す
-    std::cout << "--------------------------------------------" << std::endl;
-    // --- ここまで追加 ---
-  }
+  const std::vector<uint8_t>& received_data = (communicationType_ == "serial") ? buffer_ : *data_ptr;
 
   for (int i = 0; i < byte_read; i++) {
     valid_ = false;

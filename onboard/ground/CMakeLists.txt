@@ -77,6 +77,7 @@ include_directories(
   ${HSQUICKLOOK_INC_DIR}
   ../source/modules/include/
   ../source//core/include/
+  ../source/gl860/
   ${Boost_INCLUDE_DIR}
   ${MONGOCXX_INC_DIR}/bsoncxx/v_noabi/
   ${MONGOCXX_INC_DIR}/mongocxx/v_noabi/
@@ -100,6 +101,7 @@ set(ANL_MODULES
     ../source/modules/src/SocketTransceiver.cc
     ../source/core/src/SerialCommunication.cc
     ../source/core/src/CommandDefinition.cc
+    ../source/gl860/GL860main.cc
   )
 
 # file(GLOB ANL_MODULES "src/*.cc")

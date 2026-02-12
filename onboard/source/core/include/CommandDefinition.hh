@@ -42,6 +42,6 @@ private:
   
 };
 
-} /* namespace gramsballoon */
+} /* namespace balloon */
 
 #endif /* CommandDefinition_H */

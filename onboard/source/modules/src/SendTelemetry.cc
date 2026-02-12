@@ -51,32 +51,22 @@ ANLStatus SendTelemetry::mod_initialize()
   if (exist_module(get_raspi_status_md)) {
     get_module_NC(get_raspi_status_md, &getRaspiStatus_);
   }
-
   const std::string get_relay_status_md = "GetRelayStatus";
   if (exist_module(get_relay_status_md)) {
     get_module_NC(get_relay_status_md, &getRelayStatus_);
   }
-
-//HKStatusに追加したいデータ
-  const int num_gl860_data = getGL860DataNames_.size();
-  for (int i=0; i<num_gl860_data; i++) {
-    const std::string module_name = getGL860DataNames_[i];
-    if (exist_module(module_name)) {
-      GetGL860Data* ged;
-      get_module_NC(module_name, &ged);
-      getGL860DataVec_.push_back(ged);
-    }
+  const std::string num_gl860_data = "GetGL860Data";
+  if (exist_module(num_gl860_data)) {
+    get_module_NC(num_gl860_data, &getGL860Data_);
   }
   const std::string receive_command_md = "ReceiveCommand";
   if (exist_module(receive_command_md)) {
     get_module_NC(receive_command_md, &receiveCommand_);
   }
-
   const std::string run_id_manager_md = "RunIDManager";
   if (exist_module(run_id_manager_md)) {
     get_module_NC(run_id_manager_md, &runIDManager_);
   }
-
   const std::string receive_eu_response_md = "ReceiveEUResponse";
   if (exist_module(receive_eu_response_md)) {
       // get_module_NC は、既存のモジュールへの生ポインタを取得する関数
@@ -94,21 +84,12 @@ ANLStatus SendTelemetry::mod_initialize()
     getErrorManager()->setError(ErrorType::SEND_TELEMETRY_Ras2_COMMUNICATION_ERROR);
     return AS_ERROR;
   }
-
   if (receiveEUResponse_ != nullptr) {
     receiveEUResponse_->setSocket(this->eu_);
-    anlnext::ANLStatus status = receiveEUResponse_->mod_initialize();
-    
-    if (status != anlnext::AS_OK) {
-      std::cerr << "Error in SendTelemetry::mod_initialize: ReceiveEUResponse initialization failed." << std::endl;
-      getErrorManager()->setError(ErrorType::RECEIVE_EU_RESPONSE_INIT_ERROR); 
-    }
   }
-
   lastRegularTelemetryTime_ = std::chrono::steady_clock::now() - TELEMETRY_INTERVAL;
 
   int ground_status = 0;
-
   if (communicationType_ == "serial") {
       // 地上系本番: Serial通信 (sc_を初期化)
       sc_ = std::make_shared<SerialCommunication>(serialPath_, baudrate_, openMode_);
@@ -126,7 +107,6 @@ ANLStatus SendTelemetry::mod_initialize()
       getErrorManager()->setError(ErrorType::SEND_TELEMETRY_UNKNOWN_COMM_TYPE_ERROR);
       return AS_ERROR; 
   }
-
   if (ground_status != 0) {
       std::cerr << "Error in SendTelemetry::mod_initialize: Ground communication initialization failed." << std::endl;
       // エラータイプは、切り替え時のエラーとして汎用的なものを使う
@@ -142,26 +122,30 @@ ANLStatus SendTelemetry::mod_analyze()
     std::cerr << "Error in SendTelemetry::mod_initialize: socket in not opened" << std::endl;
     return AS_OK; 
   }
+
   if (receiveEUResponse_->hasNewData()) {
-    int id = receiveEUResponse_->getNewDataID();
-    
-    if (id != ID_Whole_TELEMETRY) {
-      telemetryType_ = id; 
-      inputInfo();
-      Sender();
-      receiveEUResponse_->clearNewDataFlag(); 
-      return AS_OK;
-    }
+    telemetryType_ = receiveEUResponse_->getNewDataID();
+    inputInfo();
+    Sender(); 
+    receiveEUResponse_->clearNewDataFlag();
+    return AS_OK;
   }
+
+  if (receiveCommand_->IhaveGL860()){
+    telemetryType_ = 6; 
+    inputInfo();
+    Sender();
+    receiveCommand_->setDoYouHaveGL860(false);
+    
+    return AS_OK;
+  }
+
   auto now = std::chrono::steady_clock::now();
   if (now - lastRegularTelemetryTime_ >= TELEMETRY_INTERVAL) {
-      std::string cmd = "rs0";
-      eu_->sendASCII(cmd); 
-      telemetryType_ = ID_Whole_TELEMETRY; 
-      inputInfo();
-      Sender(); 
-      lastRegularTelemetryTime_ = now;     
-      receiveEUResponse_->clearNewDataFlag();
+    telemetryType_ = ID_Whole_TELEMETRY; 
+    inputInfo();
+    Sender(); 
+    lastRegularTelemetryTime_ = now;
   }
   
   std::this_thread::sleep_for(std::chrono::milliseconds(sleepms_));
@@ -230,13 +214,15 @@ void SendTelemetry::inputInfo()
   }
   else if (telemetryType_==3) {
     inputEUInfo();
-    // Elmoだけ抜けるように何か操作
   }
   else if (telemetryType_==4) {
     inputRelayInfo();
   }
   else if (telemetryType_==5) {
     inputOptionalInfo();
+  }
+  else if (telemetryType_==6) {
+    inputGL860Option();
   }
   else if (telemetryType_==9) {
     inputEUInfo();
@@ -248,23 +234,36 @@ void SendTelemetry::inputInfo()
   }
 }
 
+// void SendTelemetry::inputHKVesselInfo()
+// {
+//   std::cout << "HK input Start" <<  std::endl;
+//   telemdef_->setGL860value(getGL860Data_->getGL860DataVec());
+// }
 void SendTelemetry::inputHKVesselInfo()
 {
-  const int n = getGL860DataVec_.size();
-  auto getVal = [&](int index) -> float {
-      if (index < n && getGL860DataVec_[index] != nullptr) {
-          return getGL860DataVec_[index]->Value();
-      }
-      return 0.0f; 
-  };
-  telemdef_->setPivotTemp(getVal(0));
-  telemdef_->setStarCameraTemp(getVal(1));
-  telemdef_->setMirrorTemp(getVal(2));
-  telemdef_->setGnssTemp_hk(getVal(3));
-  telemdef_->setCulculatorTemp(getVal(4));
-  telemdef_->setBatteryTemp(getVal(5));
-  telemdef_->setGyroTemp(getVal(6));
-  telemdef_->setCmosTemp(getVal(7));
+  // std::cout << "DEBUG: inputHKVesselInfo - Start" << std::endl;
+
+  if (getGL860Data_ == nullptr) {
+    std::cout << "CRITICAL: getGL860Data_ is NULL!" << std::endl;
+    return;
+  }
+
+  // ここで一旦データをローカルに取る
+  std::vector<int16_t> data = getGL860Data_->getGL860DataVec();
+  // std::cout << "DEBUG: inputHKVesselInfo - Data size: " << data.size() << std::endl;
+
+  if (telemdef_ == nullptr) {
+    std::cout << "CRITICAL: telemdef_ is NULL!" << std::endl;
+    return;
+  }
+
+  telemdef_->setGL860value(data);
+  // std::cout << "DEBUG: inputHKVesselInfo - Success" << std::endl;
+}
+
+void SendTelemetry::inputGL860Option(){
+  telemdef_->setGL860option(receiveCommand_->lastCommandGL860());
+  telemdef_->setGL860option(receiveCommand_->lastReceivedOptionGL860());
 }
 
 
@@ -302,38 +301,43 @@ void SendTelemetry::inputRelayInfo()
 }
 
 void SendTelemetry::inputEUInfo(){
+  std::cout << "DEBUG: inputEUInfo - Start" << std::endl;
+  std::string cmd = "rs0";
+  eu_->sendASCII(cmd); 
   std::cout << "DEBUG: inputEUInfo called with type: " << telemetryType_ << std::endl;
   if (telemetryType_ == 3 || telemetryType_ == 9) {
-    std::cout << "DEBUG: Setting Elmo: " << receiveEUResponse_->EUlastcommand() << std::endl;
-    telemdef_->setMotorOnOff(receiveEUResponse_->MotorOnOff());
-    telemdef_->setUnitMode(receiveEUResponse_->UnitMode());
-    telemdef_->setMoterFault(receiveEUResponse_->MoterFault());
-    telemdef_->setErrorCode(receiveEUResponse_->ErrorCode());
-    telemdef_->setPosition(receiveEUResponse_->Position());
-    telemdef_->setVelocity(receiveEUResponse_->Velocity());
-    telemdef_->setI_Qaxis(receiveEUResponse_->I_Qaxis());
-    telemdef_->setI_Daxis(receiveEUResponse_->I_Daxis());
-    telemdef_->setMaxCurrent(receiveEUResponse_->MaxCurrent());
-    telemdef_->setBusVoltage(receiveEUResponse_->BusVoltage());
-    telemdef_->setTemperatureInfomation(receiveEUResponse_->TemperatureInfomation());
-    telemdef_->setTorqueCommand(receiveEUResponse_->TorqueCommand());
-    telemdef_->setJogVelocity(receiveEUResponse_->JogVelocity());
-    telemdef_->setPositionAbusolute(receiveEUResponse_->PositionAbusolute());
-    telemdef_->setPositionRelative(receiveEUResponse_->PositionRelative());
-    telemdef_->setModeflag(receiveEUResponse_->modeflag());
-    telemdef_->setEnablefrag(receiveEUResponse_->enablefrag());
-    telemdef_->setParameterset(receiveEUResponse_->parameterset());
-    telemdef_->setEUlastcommand(receiveEUResponse_->EUlastcommand());
+    // std::cout << "DEBUG: Setting Elmo: " << receiveEUResponse_->EUlastcommand() << std::endl;
+    telemdef_->setTelemetryElmo(receiveEUResponse_->GetElmoStatus())
+    // telemdef_->setMotorOnOff(receiveEUResponse_->MotorOnOff());
+    // telemdef_->setUnitMode(receiveEUResponse_->UnitMode());
+    // telemdef_->setMoterFault(receiveEUResponse_->MoterFault());
+    // telemdef_->setErrorCode(receiveEUResponse_->ErrorCode());
+    // telemdef_->setPosition(receiveEUResponse_->Position());
+    // telemdef_->setVelocity(receiveEUResponse_->Velocity());
+    // telemdef_->setI_Qaxis(receiveEUResponse_->I_Qaxis());
+    // telemdef_->setI_Daxis(receiveEUResponse_->I_Daxis());
+    // telemdef_->setMaxCurrent(receiveEUResponse_->MaxCurrent());
+    // telemdef_->setBusVoltage(receiveEUResponse_->BusVoltage());
+    // telemdef_->setTemperatureInfomation(receiveEUResponse_->TemperatureInfomation());
+    // telemdef_->setTorqueCommand(receiveEUResponse_->TorqueCommand());
+    // telemdef_->setJogVelocity(receiveEUResponse_->JogVelocity());
+    // telemdef_->setPositionAbusolute(receiveEUResponse_->PositionAbusolute());
+    // telemdef_->setPositionRelative(receiveEUResponse_->PositionRelative());
+    // telemdef_->setModeflag(receiveEUResponse_->modeflag());
+    // telemdef_->setEnablefrag(receiveEUResponse_->enablefrag());
+    // telemdef_->setParameterset(receiveEUResponse_->parameterset());
+    // telemdef_->setEUlastcommand(receiveEUResponse_->EUlastcommand());
   }
 
   if (telemetryType_ == 2 || telemetryType_ == 9) {
-    telemdef_->setLatitude(receiveEUResponse_->latitude());
-    telemdef_->setLongitude(receiveEUResponse_->longitude());
-    telemdef_->setHeight(receiveEUResponse_->height());
-    telemdef_->setYaw(receiveEUResponse_->yaw());
-    telemdef_->setPitch(receiveEUResponse_->pitch());
-    telemdef_->setRoll(receiveEUResponse_->roll());
-    telemdef_->setTemperature(receiveEUResponse_->temperature());
+    telemdef_->setTelemetryGnss(receiveEUResponse_->GetGnssStatus())
+    // telemdef_->setLatitude(receiveEUResponse_->latitude());
+    // telemdef_->setLongitude(receiveEUResponse_->longitude());
+    // telemdef_->setHeight(receiveEUResponse_->height());
+    // telemdef_->setYaw(receiveEUResponse_->yaw());
+    // telemdef_->setPitch(receiveEUResponse_->pitch());
+    // telemdef_->setRoll(receiveEUResponse_->roll());
+    // telemdef_->setTemperature(receiveEUResponse_->temperature());
   }
 }
 
@@ -349,6 +353,7 @@ void SendTelemetry::writeTelemetryToFile(bool failed)
   if (type==3) type_str = "Elmo";
   if (type==4) type_str = "Relays";
   if (type==5) type_str = "Option";
+  if (type==6) type_str = "gl860";
   if (type==9) type_str = "Whole";
   if (type==0) type_str = "failed";
 

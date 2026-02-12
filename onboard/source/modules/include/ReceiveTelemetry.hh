@@ -18,7 +18,7 @@ public:
   virtual ~ReceiveTelemetry();
 
 protected:
-  ReceiveTelemetry(const ReceiveTelemetry &r) = default;
+  ReceiveTelemetry(const ReceiveTelemetry &r) = delete;
   
 public:
   anlnext::ANLStatus mod_define() override;

@@ -30,7 +30,7 @@ typedef struct {
     float pi;  // pitch     機体のピッチ角 [deg]
     float ro;  // roll      機体のロール角 [deg]
     float te;  // temperature 気温 / センサ温度 [°C]
-} ess0;
+} ess9;
 
 typedef struct {
     int   MO;   // Motor On/OFF 状態 (1=モーター有効, 0=無効)

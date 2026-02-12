@@ -12,46 +12,6 @@ CommandDefinition::CommandDefinition()
 {
 }
 
-// bool CommandDefinition::setCommand(const std::vector<uint8_t>& v)
-// {
-//   const int n = v.size();
-//   if (n<6) {
-//     std::cerr << "Command is too short!!: length = " << n << std::endl; 
-//     return false;
-//   }
-
-//   if (v[0]!=0xeb || v[1]!=0x90) {
-//     std::cerr << "start code incorect" << std::endl;
-//     return false;
-//   }
-//   if (v[n-2]!=0xc5 || v[n-1]!=0xa4) {
-//     std::cerr << "stop code incorrect" << std::endl;
-//     return false;
-//   }
-
-//   command_ = v;
-//   uint16_t argc = getValue<uint16_t>(4);
-
-//   if (n != 10 + 4 * static_cast<int>(argc)) {
-//     std::cerr << "Invalid command: length not appropriate" << std::endl;
-//     std::cerr << "The length of command should be " << 10+4*static_cast<int>(argc) <<
-//       ", but now it is " << n << std::endl;
-//     return false;
-//   }
-
-//   std::vector<uint8_t> com_without_fotter;
-//   for (int i=0; i<n-4; i++) {
-//     com_without_fotter.push_back(v[i]);
-//   }
-//   uint16_t crc_calc = calcCRC16(com_without_fotter);
-//   uint16_t crc_attached = getValue<uint16_t>(n-4);
-//   if (crc_calc != crc_attached) {
-//     std::cerr << "Invalid command: CRC16 not appropriate" << std::endl;
-//     return false;
-//   }
-  
-//   return true;
-// }
 bool CommandDefinition::setCommand(const std::vector<uint8_t>& v)
 {
   const int n = v.size();

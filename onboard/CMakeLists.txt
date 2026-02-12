@@ -80,25 +80,12 @@ link_directories(
   ${ANLNEXT_LIB_DIR}
   ${BOOST_LIB_DIR}
   ${MONGOCXX_LIB_DIR}
-  )
-
-# set(ANL_MODULES
-#     onboard/source/modules/src/ReceiveCommand.cc
-# 	onboard/source/modules/src/SPIManager.cc
-# 	onboard/source/modules/src/SendTelemetry.cc
-# 	onboard/source/modules/src/ShutdownSystem.cc
-# 	onboard/source/modules/src/SPIManager.cc
-# 	onboard/source/modules/src/SPIManager.cc
-#     # ここに実際に存在する .cc ファイルを並べる
-# )
-
-# add_library(${MY_LIBRARY} SHARED
-#     ${ANL_MODULES}
-# )
+)
 
 file(GLOB ANL_MODULES 
     "source/core/src/*.cc"
     "source/modules/src/*.cc"
+    "source/gl860/*.cc"
 )
 
 # これで ANL_MODULES に TelemetryDefinition.cc などが入るはずです
@@ -109,6 +96,7 @@ add_library(${MY_LIBRARY} SHARED
 target_include_directories(${MY_LIBRARY} PUBLIC
   "source/core/include"        # これが必要！
   "source/modules/include"     # これも必要！
+  "source/gl860"
   ${Boost_INCLUDE_DIRS}
   ${MONGOCXX_INC_DIR}
 )

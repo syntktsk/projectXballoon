@@ -335,7 +335,7 @@ void send_command(const std::vector<std::vector<std::string>> &commands, int run
   CommandSender sender; // 送信処理を実行するクラス
   if (sender.CommunicationType() == 1){
     // シリアルポートパスを設定 (Mac環境の例)
-    sender.set_serial_port("/dev/tty.usbserial-14410");
+    sender.set_serial_port("/tmp/ttyCMD.serial");
     // sender.set_serial_port("/dev/ttyAMA0"); // ラズパイ環境などの例（コメントアウト）
     
     // シリアルポートを開く

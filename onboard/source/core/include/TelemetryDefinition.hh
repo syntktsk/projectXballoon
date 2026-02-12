@@ -1,9 +1,10 @@
 #ifndef TelemetryDefinition_H
 #define TelemetryDefinition_H 1
-
+#include "eu_struct.hh"
 #include <iostream>
 #include <vector>
 #include <sys/time.h>
+#include <GL860main.hh>
 #include "CRC16.hh"
 #include "BinaryFileManipulater.hh"
 #include <cstring>
@@ -23,6 +24,7 @@ enum class TelemetryType {
   Elmo = 3,
   Relays = 4,
   Optional = 5,
+  GL860 = 6,
   Whole = 9,
 };
 
@@ -42,14 +44,16 @@ public:
   TelemetryDefinition(); 
 //  Telemetry作るやつ、全体・HK・Elmoモータ・GNSS位置情報・リレーでやってみる
   void generateTelemetry();
-  void generateTelemetryWhole();
+  // void generateTelemetryWhole();
   void generateTelemetryHK();
-  void generateTelemetryElmo();//構造体→バイナリにするよ
+  void generateTelemetryElmo();
   void generateTelemetryGNSS();
   void generateTelemetryRelays();
   void generateTelemetryOption();
+  void generateTelemetryGL860();
 //   データ書き込むやつ。RTDは温度計で、環境データはGNSSとかかな今回の場合。CRCはコマンドちゃんと送れてるか数えるやつ
-  void writeGL860value();
+  void writeGL860value(std::vector<int16_t>& getGL860DataVec_);
+  void writeGL860status(std::vector<uint8_t>& range_info_);
   void writeEnvironmentalData();
   void writeEss();
   void writeEr();
@@ -58,27 +62,28 @@ public:
   void writeFile(const std::string& filename, bool append);
 
   bool setTelemetry(const std::vector<uint8_t>& v);//   バイナリをテレメトリにセットするやつ？らしい
-  void interpret();//   Setで受け取ったやつをそれぞれ構造体で解釈する関数
+  void interpret();//Setで受け取ったやつをそれぞれ構造体で解釈する関数
   void interpretHK();
+  void interpretGL860option();
+  void interpretGL860stat();
   void interpretElmo();
   void interpretGNSS();
   void interpretRelays();
   void interpretWhole();
   void interpretOption(int header_size);
-//   おまじない
+// おまじない
   template<typename T> void addValue(T input);
   template<typename T> void addVector(std::vector<T>& input);
   template<typename T> T getValue(int index);
-  template<typename T> T getValuel(int index);
   template<typename T> void getVector(int index, int num, std::vector<T>& vec);
-
   const std::vector<uint8_t>& Telemetry() const { return telemetry_; }  
 
   // rtd
-  void setGL860value(int index, int16_t v) { getGL860DataVec_[index] = v; }
+  // void setGL860value(int index, int16_t v) { getGL860DataVec_[index] = v; }
+  void setGL860value(std::vector<int16_t> v){ getGL860DataVec_= v; }
+  void setGL860option(std::string v){ gl860string_= v; }
+  void setlastCommandGL860(std::string v){ lastCommandGL860_ = v;}
   void resizeGL860value(int n) { getGL860DataVec_.resize(n); }
-  std::vector<int16_t>& getGL860DataVec() {return getGL860DataVec_; }
-  
   void setSDCapacity(uint64_t v) { SDCapacity_ = v; }
   void setRunID(int32_t v) { runID_ = v; }
 
@@ -114,20 +119,10 @@ public:
   void setPi_hkVolt(uint16_t v)      { Pi_hkVolt_ = v; }
   void setPivotVolt(uint16_t v)      { PivotVolt_ = v; }
   void setHubVolt(uint16_t v)        { HubVolt_ = v; }
-
+  
   void setTelemetryType(uint16_t v) { telemetryType_ = v;}
 // setterForGNSS
-  // void setSeqNo(int32_t v){ seqNo_ = v;}
-  // void setYpr(const std::vector<float>& v) { ypr_ = v; } 
-  // void setAngrate(const std::vector<float>& v){ angrate_ = v;}
-  // void setPosLla(const std::vector<double>& v){ posLla_ = v;}
-  // void setVelocity(const std::vector<float>& v){ GNSSvelocity_ = v;}
-  // void setInsStatus(uint16_t v){insStatus_ = v;}
-  // void setGNSStemp(float v){GNSStemp_ = v;}
-  // void setGNSSpres(float v){GNSSpres_ = v;}
-  // void setCurrutc(const TUTC& v){currutc_ = v;}
-  // void setIMUsensSat(uint16_t v){IMUsensSat_ = v;}
-  // void setGNSSnumSats(uint8_t v){GNSSnumSats_ = v;}
+  void setElmoData(const ess2& v) {gnss_status = v; }
   void setLatitude(float v){ la_ = v; }
   void setLongitude(float v){ lo_ = v; }
   void setHeight(float v){ he_ = v; }
@@ -137,6 +132,7 @@ public:
   void setTemperature(float v){ te_ = v; }
 
 // ForElmo　ここは変わる
+  void setElmoData(const ess1& v) {elmo_status = v; }
   void setMotorOnOff(int v){ MO_ = v; }
   void setUnitMode(int v){ UM_ = v; }
   void setMoterFault(float v){ MF_ = v; }
@@ -171,9 +167,13 @@ public:
   int32_t RunID() { return runID_; }
   uint16_t CRC() { return crc_; }
   uint32_t StopCode() { return stopCode_; }
-
   int64_t SDCapacity() { return SDCapacity_; }
-// getter of HK で、温度だけやってもいいかも
+
+  // getter of HK で、温度だけやってもいいかも
+  std::vector<int16_t>& getGL860DataVec() {return getGL860DataVec_; }
+  std::string GL860option(){ return gl860string_; }
+  std::vector<float>& gl860ground() {return gl860_ground_; }
+  std::string lastCommandGL860(){return lastCommandGL860_;}
   // --- 温度系 ---
   uint16_t PivotTemp(){ return PivotTemp_; }
   uint16_t StarCameraTemp() { return StarCameraTemp_; }
@@ -217,17 +217,6 @@ public:
   int EUlastcommand(){return elc_;}
 
 // getter of GNSS
-  // int32_t SeqNo(){ return seqNo_; }
-  // const std::vector<float>& ypr() const { return ypr_; }
-  // uint16_t InsStatus(){ return insStatus_; }
-  // const std::vector<float>& Angrate() const { return angrate_; }
-  // const std::vector<double>& PosLla() const { return posLla_; }
-  // const std::vector<float>& GNSSVelocity() const { return GNSSvelocity_; }
-  // float GNSStemp() { return GNSStemp_; }
-  // float GNSSpres() { return GNSSpres_; }
-  // const TUTC& currutc() const { return currutc_; }
-  // uint16_t IMUsensSat() { return IMUsensSat_;}
-  // uint8_t GNSSnumSats() { return GNSSnumSats_; }
   float latitude(){ return la_; }
   float longitude(){ return lo_; }
   float height(){ return he_; }
@@ -263,6 +252,12 @@ private:
 
   // HK
   std::vector<int16_t> getGL860DataVec_;
+  std::string gl860string_;
+  std::vector<float> gl860_ground_;
+  std::string lastCommandGL860_;
+  std::vector<int> range_info_ = {
+    4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000,
+  };
   // --- 温度系 ---
   uint16_t PivotTemp_;
   uint16_t StarCameraTemp_;
@@ -285,6 +280,7 @@ private:
   uint16_t HubVolt_;
 
   // Elmo
+  ess1 elmo_status;
   int MO_ = 0;   // Motor On/OFF 状態 (1=モーター有効, 0=無効)
   int UM_ = 0;   // Unit Mode = 0,1,2,5
   float MF_ = 0;   // Motor Fault 異常停止要因（モーターが無効化された理由）
@@ -305,19 +301,7 @@ private:
   int ps_ = 0;  
   int elc_= 0;
 
-  // // GNSS
-  // int32_t seqNo_ = 0;
-  // std::vector<float> ypr_;
-  // std::vector<float> angrate_;
-  // std::vector<double>posLla_;
-  // std::vector<float> GNSSvelocity_;
-  // uint16_t insStatus_ = 0;
-  // float GNSStemp_ = 0;
-  // float GNSSpres_ = 0;
-  // TUTC currutc_;
-  // uint16_t IMUsensSat_ = 0;
-  // uint8_t GNSSnumSats_ = 0;
-// GNSS_v2
+  ess2 gnss_status;
   float la_ = 0;
   float lo_ = 0;  // longitude 経度 [deg]
   float he_ = 0;  // height    海抜高度 [m]
@@ -345,18 +329,15 @@ void TelemetryDefinition::addValue(T input)
   const int size = sizeof(T);
   uint64_t v = 0;
 
-  // 1. 型変換ではなく、メモリの中身をそのまま v にコピーする
-  // これにより float のビットパターンがそのまま保持される
   std::memcpy(&v, &input, size);
 
   // 2. ビッグエンディアンとして push_back
   for (int i=0; i<size; i++) {
-    // memcpyでvに入れた場合、PC（リトルエンディアン）では逆順になっているので
-    // 送信順序を調整する（元のロジックに合わせるならこうなります）
     const int shift = 8 * (size-1-i);
     telemetry_.push_back(static_cast<uint8_t>((v >> shift) & 0xff));
   }
 }
+
 template<typename T>
 void TelemetryDefinition::addVector(std::vector<T>& input)
 {
@@ -366,36 +347,6 @@ void TelemetryDefinition::addVector(std::vector<T>& input)
   }
 }
 
-// template<typename T>
-// T TelemetryDefinition::getValue(int index)
-// {
-//   const int n = telemetry_.size();
-//   const int byte = sizeof(T);
-//   if (index+byte>n) {
-//     std::cerr << "TelemetryDefinition::getValue error: out of range" << std::endl;
-//     std::cerr << "telemetry_.size() = " << n << ", index = " << index << ", byte = " << byte << std::endl;
-//     return static_cast<T>(0);
-//   }
-//   if (byte > 8) {
-//     std::cerr << "TelemetryDefinition::getValue error: typename error" << std::endl;
-//     std::cerr << "byte should be equal to or less than 8: byte = " << byte << std::endl;
-//     return static_cast<T>(0);
-//   }
-//   uint64_t v = 0;
-//   for (int i = 0; i < byte; i++) {
-//     const int j = index + i;
-//     const int shift = 8 * (byte - 1 - i); 
-//     v |= (static_cast<uint64_t>(telemetry_[j]) << shift);
-//   }
-//   T value;
-//   memcpy(&value, &v, sizeof(T));
-
-//   if (std::isnan(static_cast<double>(value))) {
-//     value = static_cast<T>(0.0);
-//   }
-  
-//   return value;
-// }
 template<typename T>
 T TelemetryDefinition::getValue(int index)
 {
@@ -413,46 +364,6 @@ T TelemetryDefinition::getValue(int index)
     p[byte - 1 - i] = telemetry_[index + i];
   }
 
-  // 3. この時点で value の中身は、正しい符号(int)や指数(float)を持った状態になる
-  
-  // もし NaN チェックを残すなら float/double の時だけに限定する
-  // if (std::is_floating_point<T>::value && std::isnan(static_cast<double>(value))) {
-  //   return static_cast<T>(0);
-  // }
-
-  return value;
-}
-
-template<typename T>
-T TelemetryDefinition::getValuel(int index)
-{
-  const int n = telemetry_.size();
-  const int byte = sizeof(T);
-  
-  if (index + byte > n) {
-    return static_cast<T>(0);
-  }
-
-  // バイト列を数値(v)に組み立てる
-  uint64_t v = 0;
-  for (int i = 0; i < byte; i++) {
-    const int j = index + i;
-    // --- ここを修正 ---
-    // 最初のバイトを一番下の桁(0bitシフト)にする
-    const int shift = 8 * i; 
-    v |= (static_cast<uint64_t>(telemetry_[j]) << shift);
-  }
-
-  T value;
-  memcpy(&value, &v, sizeof(T));
-
-  // 前回のコンパイルエラー対策: 数値型の場合のみisnanチェック
-  if constexpr (std::is_arithmetic_v<T>) {
-    if (std::isnan(static_cast<double>(value))) {
-      value = static_cast<T>(0.0);
-    }
-  }
-  
   return value;
 }
 

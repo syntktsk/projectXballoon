@@ -13,13 +13,13 @@ class MyApp < ANL::ANLApp
     chain Balloon::ReceiveTelemetry
     with_parameters(
           open_mode: 2, 
-          timeout_sec: 0.1, 
+          timeout_sec: 1.0, 
           save_command: true,
           num_command_per_file: 1000,
           # 地上系との通信手段の選択
           communication_type: "socket", # "serial" or "socket"
-          serial_path: "/dev/ttyAMA0",
-          OU_socket_serverIp:"192.168.1.207", #mac
+          serial_path: "/tmp/tty.serial",
+          OU_socket_serverIp:"192.168.10.101", #mac
           OU_socket_port: 7070,
           chatter: 1, 
           binary_filename_base: "/Users/syn/balloon/data/telemetry/telemetry",

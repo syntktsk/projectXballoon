@@ -79,6 +79,7 @@ public:
 
 private:
   uint64_t errorCode_ = 0;
+  uint16_t errorNum_ = 0;
 };
 
 } /* namespace balloon */

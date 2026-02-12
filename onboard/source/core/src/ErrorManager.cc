@@ -19,6 +19,7 @@ void ErrorManager::setError(ErrorType v)
   const int shift = static_cast<int>(v);
   const uint64_t one = 1;
   errorCode_ |= (one << shift);
+  errorNum_++;
 }
 
 int ErrorManager::strToBit(const std::string& s)
@@ -44,11 +45,12 @@ std::string ErrorManager::bitToStr(int v)
   return s;
 }
 void ErrorManager::clearError(ErrorType v)
-{
+{ 
   const int shift = static_cast<int>(v);
   const uint64_t one = 1;
   // 指定したビットだけが 0、他がすべて 1 のマスクを作って AND演算
   errorCode_ &= ~(one << shift);
+  errorNum_ = 0;
 }
 
 } /* namespace balloon */

@@ -62,6 +62,7 @@ ANLStatus InterpretTelemetry::mod_analyze()
     writeTelemetryToFile(failed);
     return AS_OK;
   }
+  
   telemdef_->interpret();
   currentTelemetryType_ = telemdef_->TelemetryType();
 

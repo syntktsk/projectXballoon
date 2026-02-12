@@ -28,6 +28,7 @@ public:
   void pushElmoTelemetry();
   void pushRelayTelemetry();
   void pushOptionalTelemetry();
+  void pushGL860OptionalTelemetry();
   void pushWaveformImage(const std::vector<std::string>& keys, const std::vector<std::string>& image_filenames);
 
 private:

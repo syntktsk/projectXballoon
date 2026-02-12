@@ -9,8 +9,6 @@ namespace balloon {
 ReceiveCommand::ReceiveCommand()
   : baudrate_(B1200), openMode_(O_RDWR)
 {
-  // TPCHVControllerModuleName_ = "ControlHighVoltage_TPC";
-  // PMTHVControllerModuleName_ = "ControlHighVoltage_PMT";
   serialPath_ = "/dev/null";
   binaryFilenameBase_ = "Command";
   comdef_ = std::make_shared<CommandDefinition>(); 
@@ -23,7 +21,6 @@ ReceiveCommand::~ReceiveCommand() = default;
 
 ANLStatus ReceiveCommand::mod_define()
 {
-  define_parameter("open_mode", &mod_class::openMode_);
   define_parameter("timeout_sec", &mod_class::timeoutSec_);
   define_parameter("save_command", &mod_class::saveCommand_);
   define_parameter("binary_filename_base", &mod_class::binaryFilenameBase_);
@@ -52,19 +49,6 @@ ANLStatus ReceiveCommand::mod_initialize()
   if (exist_module(shutdown_system_md)) {
     get_module_NC(shutdown_system_md, &shutdownSystem_);
   }
-
-  // const std::string read_wf_md = "ReadWaveform";
-  // if (exist_module(read_wf_md)) {
-  //   get_module_NC(read_wf_md, &readWaveform_);
-  // }
-
-  // if (exist_module(TPCHVControllerModuleName_)) {
-  //   get_module_NC(TPCHVControllerModuleName_, &TPCHVController_);
-  // }
-
-  // if (exist_module(PMTHVControllerModuleName_)) {
-  //   get_module_NC(PMTHVControllerModuleName_, &PMTHVController_);
-  // }
 
   const std::string run_id_manager_md = "RunIDManager";
   if (exist_module(run_id_manager_md)) {
@@ -140,7 +124,8 @@ ANLStatus ReceiveCommand::mod_analyze()
     std::this_thread::sleep_for(std::chrono::milliseconds(serialReadingTimems_));
     byte_read = sc_->sread(buffer_, bufferSize_);
   }else if (communicationType_ == "socket"){
-    const int telemetry_id = ou_->receiveBinary(); 
+    const int telemetry_id = ou_->receiveBinary();
+    (void)telemetry_id;
     const std::vector<uint8_t>& received_data = ou_->last_received_raw_data();
     byte_read = received_data.size();
     buffer_ = received_data;
@@ -282,6 +267,8 @@ bool ReceiveCommand::applyCommand()
       StringCommand_ = "rs" + code_int_str;
       std::cout << "ReceiveCommand: To " << EU_serverIp_ << ":" << EU_port_ << " Data: " << StringCommand_ << std::endl;
       eu_ ->sendASCII(StringCommand_);
+      // if(code == 300)
+
       return true;
   }
 
@@ -310,26 +297,43 @@ bool ReceiveCommand::applyCommand()
         StringCommand_ = "MO=" + arg_str;
       } else if (code == 506){
         StringCommand_ = "UM=" + arg_str;
-      } else {
+      } else if (code == 599) {
+        StringCommand_ = "wc=" + arg_str;
+        eu_ ->sendASCII(StringCommand_);
+        std::cout << "Sending to EU by Receive: " << StringCommand_ << std::endl;
+      }else {
         std::cerr << "ReadCommand: command " << code << " not found" << std::endl;
         return true;
       }
       // デバッグ出力で確認（クォートが表示されないはず）
       std::cout << "Sending to EU: " << StringCommand_ << std::endl;
-      
+  
       eu_->sendASCII(StringCommand_);
       return true;
   }
-  if (code >= 600 && code <= 699) {
-    std::string arg_str = "";
-    if (!arguments.empty()) {
-      arg_str = arguments[0];
+
+  if (code >=600 && code <=699){
+    if (code == 699){
+      if (!IhaveGl860Data_){
+        lastReceivedGL860_ = "";
+        std::string arg_str = "";
+        if (!arguments.empty()) {
+          arg_str = arguments[0];
+        }
+        StringCommand_ = arg_str;
+        lastReceivedGL860_ = GL860main_->sendAndReceive(StringCommand_);
+        IhaveGl860Data_ = true;
+        if (!lastReceivedGL860_.empty()){
+          lastCommandGL860_ = StringCommand_;
+        }
+        std::cout << "Sending to GL860 > " << StringCommand_ << std::endl;
+      }else{
+        std::cout << "sending data now, try again." << std::endl;
+        return true;
+      }
     }
-    StringCommand_ = "wc=" + arg_str;
-    eu_ ->sendASCII(StringCommand_);
-    std::cout << "Sending to EU by Receive: " << StringCommand_ << std::endl;
     return true;
-  };
+  }
 
   if (code==900 && argc==0) {
     return true;

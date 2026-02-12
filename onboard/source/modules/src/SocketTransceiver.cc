@@ -42,45 +42,6 @@ int SocketTransceiver::initialize(bool soul_bind) {
     return open_socket(soul_bind) ? 0 : -1;
 }
 
-// bool SocketTransceiver::open_socket(bool soul_bind) {
-//     if (sock_fd_ != -1) {
-//         std::cerr << "Already open." << std::endl;
-//         return false;
-//     }
-//     sock_fd_ = socket(AF_INET, SOCK_DGRAM, 0);
-//     if (sock_fd_ < 0) {
-//         std::cerr << "Failed to create socket." << std::endl;
-//         return false;
-//     }
-//     struct timeval tv; //タイムアウトの設定
-//     tv.tv_sec = RECEIVE_TIMEOUT_MS / 1000;
-//     tv.tv_usec = (RECEIVE_TIMEOUT_MS % 1000) * 1000; 
-//     if (setsockopt(sock_fd_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-//         std::cerr << "Failed to set socket timeout." << std::endl;
-//         close(sock_fd_);
-//         sock_fd_ = -1;
-//         return false;
-//     }
-//     struct sockaddr_in local_addr;//受信アドレス
-//     memset(&local_addr, 0, sizeof(local_addr));
-//     local_addr.sin_family = AF_INET;
-//     local_addr.sin_port = htons(port_); 
-//     if (inet_pton(AF_INET, serverIp_.c_str(), &local_addr.sin_addr) <= 0) {
-//         std::cerr << "Invalid local address or address not supported." << std::endl;
-//         close(sock_fd_);
-//         sock_fd_ = -1;
-//         return false;
-//     }
-//     if (soul_bind) {
-//     if (bind(sock_fd_, (struct sockaddr*)&local_addr, sizeof(local_addr)) < 0) {
-//         std::cerr << "Failed to bind socket to port " << port_ << ": " << strerror(errno) << std::endl;
-//         close(sock_fd_);
-//         sock_fd_ = -1;
-//         return false;
-//     }}
-//     std::cout << "Successfully opened UDP socket to" << serverIp_ << ":" << port_ <<std::endl;
-//     return true;
-// }
 bool SocketTransceiver::open_socket(bool soul_bind) {
     // すでに開いている場合は二重に開かない
     if (sock_fd_ != -1) {
@@ -111,10 +72,7 @@ bool SocketTransceiver::open_socket(bool soul_bind) {
     local_addr.sin_family = AF_INET;
     local_addr.sin_port = htons(port_); // 9998 または 9090
     
-    // --- ここからが修正のキモ ---
-    
     if (soul_bind) {
-        // 【受信待ち（bind）モード】
         // 相手のIPを指定してbindするとエラーになるので、INADDR_ANY（自分の全IP）を使う
         local_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
         
@@ -126,7 +84,6 @@ bool SocketTransceiver::open_socket(bool soul_bind) {
         }
         std::cout << "Successfully bound socket to port " << port_ << " (Ready to receive)" << std::endl;
     } else {
-        // 【送信専用モード】
         // bindせずに、送り先（Macなど）のアドレスが正しいかチェックだけ行う
         if (inet_pton(AF_INET, serverIp_.c_str(), &local_addr.sin_addr) <= 0) {
             std::cerr << "Invalid local address or address not supported: " << serverIp_ << std::endl;

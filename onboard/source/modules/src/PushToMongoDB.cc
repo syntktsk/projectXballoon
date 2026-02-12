@@ -53,6 +53,9 @@ ANLStatus PushToMongoDB::mod_analyze()
   else if (interpreter_->CurrentTelemetryType()==5) {
     pushOptionalTelemetry();
   }
+  else if (interpreter_->CurrentTelemetryType()==6) {
+    pushGL860OptionalTelemetry();
+  }
   return AS_OK;
 }
 
@@ -136,14 +139,14 @@ void PushToMongoDB::pushWholeTelemetry()
   {
     const std::string section_name = "Temperature";
     auto section = bsoncxx::builder::stream::document{}
-      << "Pivot_Temperature"        << static_cast<int>(telemdef->PivotTemp())
-      << "StarCamera_Temperature"   << static_cast<int>(telemdef->StarCameraTemp())
-      << "Mirror_Temperature"       << static_cast<int>(telemdef->MirrorTemp())
-      << "GNSS_Temperature_HK"      << static_cast<int>(telemdef->GnssTemp_hk())
-      << "Calculator_Temperature"   << static_cast<int>(telemdef->CulculatorTemp())
-      << "Battery_Temperature"      << static_cast<int>(telemdef->BatteryTemp())
-      << "Gyro_Temperature"         << static_cast<int>(telemdef->GyroTemp())
-      << "CMOS_Temperature"         << static_cast<int>(telemdef->CmosTemp())
+      << "Pivot_Temperature"        << telemdef->gl860ground()[0]
+      << "StarCamera_Temperature"   << telemdef->gl860ground()[1]
+      << "Mirror_Temperature"       << telemdef->gl860ground()[2]
+      << "GNSS_Temperature_HK"      << telemdef->gl860ground()[3]
+      << "Calculator_Temperature"   << telemdef->gl860ground()[4]
+      << "Battery_Temperature"      << telemdef->gl860ground()[5]
+      << "Gyro_Temperature"         << telemdef->gl860ground()[6]
+      << "CMOS_Temperature"         << telemdef->gl860ground()[7]
 
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
@@ -151,20 +154,20 @@ void PushToMongoDB::pushWholeTelemetry()
   {
     const std::string section_name = "Voltage";
     auto section = bsoncxx::builder::stream::document{}
-      << "PC_Voltage"               << static_cast<int>(telemdef->PcVolt())
-      << "StarCamera_Voltage"       << static_cast<int>(telemdef->StarCameravolt())
-      << "GNSS_Voltage"             << static_cast<int>(telemdef->GnssVolt())
-      << "Gyro_Voltage"             << static_cast<int>(telemdef->GyroVolt())
-      << "CMOS_Voltage"             << static_cast<int>(telemdef->CmosVolt())
-      << "Router_Voltage"           << static_cast<int>(telemdef->RouterVolt())
-      << "Heater_Voltage"           << static_cast<int>(telemdef->HeaterVolt())
-      << "Pi_HK_Voltage"            << static_cast<int>(telemdef->Pi_hkVolt())
-      << "Pivot_Voltage"            << static_cast<int>(telemdef->PivotVolt())
-      << "Hub_Voltage"              << static_cast<int>(telemdef->HubVolt())
+      << "PC_Voltage"               << telemdef->gl860ground()[8]
+      << "StarCamera_Voltage"       << telemdef->gl860ground()[9]
+      << "GNSS_Voltage"             << telemdef->gl860ground()[10]
+      << "Gyro_Voltage"             << telemdef->gl860ground()[11]
+      << "CMOS_Voltage"             << telemdef->gl860ground()[12]
+      << "Router_Voltage"           << telemdef->gl860ground()[13]
+      << "Heater_Voltage"           << telemdef->gl860ground()[14]
+      << "Pi_HK_Voltage"            << telemdef->gl860ground()[15]
+      << "Pivot_Voltage"            << telemdef->gl860ground()[16]
+      << "Hub_Voltage"              << telemdef->gl860ground()[17]
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
-  {
+  { 
     const std::string section_name = "Software_Error";
     auto section_stream = bsoncxx::builder::stream::document{};
     uint64_t error_code = telemdef->SoftwareErrorCode();
@@ -225,30 +228,31 @@ void PushToMongoDB::pushHKTelemetry()
   {
     const std::string section_name = "Temperature";
     auto section = bsoncxx::builder::stream::document{}
-      << "Pivot_Temperature"        << static_cast<int>(telemdef->PivotTemp())
-      << "StarCamera_Temperature"   << static_cast<int>(telemdef->StarCameraTemp())
-      << "Mirror_Temperature"       << static_cast<int>(telemdef->MirrorTemp())
-      << "GNSS_Temperature_HK"      << static_cast<int>(telemdef->GnssTemp_hk())
-      << "Calculator_Temperature"   << static_cast<int>(telemdef->CulculatorTemp())
-      << "Battery_Temperature"      << static_cast<int>(telemdef->BatteryTemp())
-      << "Gyro_Temperature"         << static_cast<int>(telemdef->GyroTemp())
-      << "CMOS_Temperature"         << static_cast<int>(telemdef->CmosTemp())
+      << "Pivot_Temperature"        << telemdef->gl860ground()[0]
+      << "StarCamera_Temperature"   << telemdef->gl860ground()[1]
+      << "Mirror_Temperature"       << telemdef->gl860ground()[2]
+      << "GNSS_Temperature_HK"      << telemdef->gl860ground()[3]
+      << "Calculator_Temperature"   << telemdef->gl860ground()[4]
+      << "Battery_Temperature"      << telemdef->gl860ground()[5]
+      << "Gyro_Temperature"         << telemdef->gl860ground()[6]
+      << "CMOS_Temperature"         << telemdef->gl860ground()[7]
+
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
   {
     const std::string section_name = "Voltage";
     auto section = bsoncxx::builder::stream::document{}
-      << "PC_Voltage"               << static_cast<int>(telemdef->PcVolt())
-      << "StarCamera_Voltage"       << static_cast<int>(telemdef->StarCameravolt())
-      << "GNSS_Voltage"             << static_cast<int>(telemdef->GnssVolt())
-      << "Gyro_Voltage"             << static_cast<int>(telemdef->GyroVolt())
-      << "CMOS_Voltage"             << static_cast<int>(telemdef->CmosVolt())
-      << "Router_Voltage"           << static_cast<int>(telemdef->RouterVolt())
-      << "Heater_Voltage"           << static_cast<int>(telemdef->HeaterVolt())
-      << "Pi_HK_Voltage"            << static_cast<int>(telemdef->Pi_hkVolt())
-      << "Pivot_Voltage"            << static_cast<int>(telemdef->PivotVolt())
-      << "Hub_Voltage"              << static_cast<int>(telemdef->HubVolt())
+      << "PC_Voltage"               << telemdef->gl860ground()[8]
+      << "StarCamera_Voltage"       << telemdef->gl860ground()[9]
+      << "GNSS_Voltage"             << telemdef->gl860ground()[10]
+      << "Gyro_Voltage"             << telemdef->gl860ground()[11]
+      << "CMOS_Voltage"             << telemdef->gl860ground()[12]
+      << "Router_Voltage"           << telemdef->gl860ground()[13]
+      << "Heater_Voltage"           << telemdef->gl860ground()[14]
+      << "Pi_HK_Voltage"            << telemdef->gl860ground()[15]
+      << "Pivot_Voltage"            << telemdef->gl860ground()[16]
+      << "Hub_Voltage"              << telemdef->gl860ground()[17]
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
@@ -476,4 +480,44 @@ void PushToMongoDB::pushOptionalTelemetry()
 
 }  
 
+void PushToMongoDB::pushGL860OptionalTelemetry(){
+  TelemetryDefinition* telemdef = interpreter_->Telemdef();
+
+  hsquicklook::DocumentBuilder builder("Telemetry", "Option");
+  builder.setTI(telemdef->TimeNow().tv_sec*64 + telemdef->TimeNow().tv_usec*64*1E-6);
+  builder.setTimeNow();
+
+  {
+    const std::string section_name = "Header";
+    auto section = bsoncxx::builder::stream::document{}
+      << "Start_Code"      << static_cast<int64_t>(telemdef->StartCode())
+      << "Telemetry_Type"  << static_cast<int>(telemdef->TelemetryType())
+      << "Time"            << static_cast<int>((telemdef->TimeNow()).tv_sec)
+      << "Time_us"         << static_cast<int>((telemdef->TimeNow()).tv_usec)
+      << "Telemetry_Index" << static_cast<int>(telemdef->TelemetryIndex())
+      << "Run_ID"          << static_cast<int>(telemdef->RunID())
+      << bsoncxx::builder::stream::finalize;
+    builder.addSection(section_name, section);
+  }
+  {
+    const std::string section_name = "Status";
+    auto section = bsoncxx::builder::stream::document{}
+      << "gl860_string ="        << static_cast<std::string>(telemdef->GL860option())
+      << "gl860_lastCommand ="       << static_cast<std::string>(telemdef->lastCommandGL860())
+    << bsoncxx::builder::stream::finalize;
+    builder.addSection(section_name, section);
+  }
+  {
+    const std::string section_name = "Footer";
+    auto section = bsoncxx::builder::stream::document{}
+      << "CRC"                  << static_cast<int>(telemdef->CRC())
+      << "Stop_Code"            << static_cast<int64_t>(telemdef->StopCode())
+      << bsoncxx::builder::stream::finalize;
+    builder.addSection(section_name, section);
+  }
+
+  auto doc = builder.generate();
+  mongodbClient_->push("BACS", doc);
+
+}
 } /* namespace balloon */

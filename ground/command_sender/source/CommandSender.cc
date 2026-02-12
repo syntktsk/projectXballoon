@@ -30,7 +30,7 @@ CommandSender::CommandSender()
   CommunicationType_ = 2;//1->Serial 2->Socket
   serial_port_ = SERIAL_PORT;
   
-  ServerIp_ ="192.168.1.120";
+  ServerIp_ ="192.168.10.138";
   port_ = 9090 ;
 }
 

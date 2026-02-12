@@ -16,6 +16,8 @@
 #include "SerialCommunication.hh"
 #include "ShutdownSystem.hh"
 #include "SocketTransceiver.hh"
+#include "GetGL860Data.hh"
+#include "GL860main.hh"
 #include "SendTelemetry.hh"
 #include "RunIDManager.hh"
 using namespace anlnext;
@@ -26,6 +28,7 @@ class ShutdownSystem;
 class SendTelemetry;
 class RunIDManager;
 class SocketTransceiver;
+class GL860main;
 
 class ReceiveCommand : public anlnext::BasicModule
 {
@@ -52,6 +55,10 @@ public:
   uint16_t CommandCode() { return (singleton_self()->comdef_)->Code(); }
   uint32_t CommandIndex() { return singleton_self()->commandIndex_; }
   uint16_t CommandRejectCount() { return singleton_self()->commandRejectCount_; }
+  std::string lastCommandGL860(){return singleton_self()->lastCommandGL860_;}
+  std::string lastReceivedOptionGL860() {return singleton_self()->lastReceivedGL860_;} //singleton_selfがあんま分かってないヨ
+  void setDoYouHaveGL860(bool v) { IhaveGl860Data_ = v; }
+  bool IhaveGL860(){return singleton_self()->IhaveGl860Data_;}
 
 private:
   std::vector<uint8_t> buffer_;
@@ -69,12 +76,8 @@ private:
   // access to other classes
   SendTelemetry* sendTelemetry_ = nullptr;
   ShutdownSystem* shutdownSystem_ = nullptr;
-  // ReadWaveform* readWaveform_ = nullptr;
-  // ControlHighVoltage* TPCHVController_ = nullptr;
-  // std::string TPCHVControllerModuleName_ = "";
-  // ControlHighVoltage* PMTHVController_ = nullptr;
-  // std::string PMTHVControllerModuleName_ = "";
   RunIDManager* runIDManager_ = nullptr;
+  GL860main* GL860main_ = nullptr;
   ErrorManager* getErrorManager();
 
   //communication
@@ -94,7 +97,9 @@ private:
   std::string communicationType_;
   std::string serverIp_; 
   int port_;
-    
+  std::string lastCommandGL860_;
+  std::string lastReceivedGL860_;
+  bool IhaveGl860Data_;
   std::shared_ptr<SocketTransceiver> eu_;
   std::shared_ptr<SocketTransceiver> ou_;
 };

@@ -29,7 +29,7 @@ typedef struct {
     int   ac;   // mode flag 運転モード番号 (0~21)
     int   ef;   // enable flag 回転可能かどうか (0=回転不可, 1=回転可能)
     int   ps;   // parameter set 使用中のパラメータセット番号
-    int lc;
+    // int   lc;
 } ess1;
 
 // GNSSコンパス用構造体 4Bytes * 7 = 28Bytes

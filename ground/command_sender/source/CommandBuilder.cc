@@ -47,7 +47,11 @@ CommandBuilder::CommandBuilder()
   code_map_["Setting_PR[]"]            = CommandProperty{504, 1};
   code_map_["Setting_MO"]              = CommandProperty{505, 1};
   code_map_["Setting_UM"]              = CommandProperty{506, 1};
-  code_map_["Optional_Command"]        = CommandProperty{600, 1};
+  code_map_["Optional_Command"]        = CommandProperty{599, 1};
+  code_map_["Reset_gl860"]             = CommandProperty{600, 0};
+  // code_map_["Reset_gl860"]             = CommandProperty{601, 0};
+  code_map_["Stat_gl860"]              = CommandProperty{602, 0};
+  code_map_["Optional_gl860"]          = CommandProperty{699, 1};
   code_map_["Other"]                   = CommandProperty{900, 0};
 }
 
