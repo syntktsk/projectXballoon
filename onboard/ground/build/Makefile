@@ -344,6 +344,30 @@ Users/syn/balloon/onboard/source/core/src/TelemetryDefinition.cc.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/BACSMonitor.dir/build.make CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/core/src/TelemetryDefinition.cc.s
 .PHONY : Users/syn/balloon/onboard/source/core/src/TelemetryDefinition.cc.s
 
+Users/syn/balloon/onboard/source/gl860/GL860main.o: Users/syn/balloon/onboard/source/gl860/GL860main.cc.o
+.PHONY : Users/syn/balloon/onboard/source/gl860/GL860main.o
+
+# target to build an object file
+Users/syn/balloon/onboard/source/gl860/GL860main.cc.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/BACSMonitor.dir/build.make CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/gl860/GL860main.cc.o
+.PHONY : Users/syn/balloon/onboard/source/gl860/GL860main.cc.o
+
+Users/syn/balloon/onboard/source/gl860/GL860main.i: Users/syn/balloon/onboard/source/gl860/GL860main.cc.i
+.PHONY : Users/syn/balloon/onboard/source/gl860/GL860main.i
+
+# target to preprocess a source file
+Users/syn/balloon/onboard/source/gl860/GL860main.cc.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/BACSMonitor.dir/build.make CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/gl860/GL860main.cc.i
+.PHONY : Users/syn/balloon/onboard/source/gl860/GL860main.cc.i
+
+Users/syn/balloon/onboard/source/gl860/GL860main.s: Users/syn/balloon/onboard/source/gl860/GL860main.cc.s
+.PHONY : Users/syn/balloon/onboard/source/gl860/GL860main.s
+
+# target to generate assembly for a file
+Users/syn/balloon/onboard/source/gl860/GL860main.cc.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/BACSMonitor.dir/build.make CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/gl860/GL860main.cc.s
+.PHONY : Users/syn/balloon/onboard/source/gl860/GL860main.cc.s
+
 Users/syn/balloon/onboard/source/modules/src/InterpretTelemetry.o: Users/syn/balloon/onboard/source/modules/src/InterpretTelemetry.cc.o
 .PHONY : Users/syn/balloon/onboard/source/modules/src/InterpretTelemetry.o
 
@@ -497,6 +521,9 @@ help:
 	@echo "... Users/syn/balloon/onboard/source/core/src/TelemetryDefinition.o"
 	@echo "... Users/syn/balloon/onboard/source/core/src/TelemetryDefinition.i"
 	@echo "... Users/syn/balloon/onboard/source/core/src/TelemetryDefinition.s"
+	@echo "... Users/syn/balloon/onboard/source/gl860/GL860main.o"
+	@echo "... Users/syn/balloon/onboard/source/gl860/GL860main.i"
+	@echo "... Users/syn/balloon/onboard/source/gl860/GL860main.s"
 	@echo "... Users/syn/balloon/onboard/source/modules/src/InterpretTelemetry.o"
 	@echo "... Users/syn/balloon/onboard/source/modules/src/InterpretTelemetry.i"
 	@echo "... Users/syn/balloon/onboard/source/modules/src/InterpretTelemetry.s"

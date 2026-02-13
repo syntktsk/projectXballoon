@@ -206,7 +206,7 @@ bool TelemetryDefinition::setTelemetry(const std::vector<uint8_t>& v)
   telemetry_ = v;
   
   uint16_t type = getValue<uint16_t>(4);
-  const int whole_telemetry_len = 28+28+72+16+44;//Header/Footer,ess1,ess2,hk,gl860
+  const int whole_telemetry_len = 28+28+72+16+40+4;//Header/Footer,ess1,ess2,hk,gl860
   const int hk_telemetry_len = 28+20+44;
   const int Elmo_telemetry_len = 28+72;
   const int GNSS_telemetry_len = 28+28;
@@ -419,25 +419,25 @@ void TelemetryDefinition::interpretElmo()
 {
 // Elmoの解釈作る
   int i=22;
-  MO_ = getValue<int>(i);i = i + sizeof(int);
-  UM_ = getValue<int>(i);i = i + sizeof(int);
-  MF_ = getValue<float>(i);i = i + sizeof(float);
-  EC_ = getValue<int>(i);i = i + sizeof(int);
-  PX_ = getValue<int>(i);i = i + sizeof(int);
-  VX_ = getValue<float>(i);i = i + sizeof(float);
-  IQ_ = getValue<float>(i);i = i + sizeof(float);
-  ID_ = getValue<float>(i);i = i + sizeof(float);
-  MC_ = getValue<float>(i);i = i + sizeof(float);
-  BV_ = getValue<int>(i);i = i + sizeof(int);
-  TI_ = getValue<int>(i);i = i + sizeof(int);
-  TC_ = getValue<float>(i);i = i + sizeof(float);
-  JV_ = getValue<float>(i);i = i + sizeof(float);
-  PA_ = getValue<int>(i);i = i + sizeof(int);
-  PR_ = getValue<int>(i);i = i + sizeof(int);
-  ac_ = getValue<int>(i);i = i + sizeof(int);
-  ef_ = getValue<int>(i);i = i + sizeof(int);
-  ps_ = getValue<int>(i);i = i + sizeof(int);
-  elc_= getValue<int>(i);i = i + sizeof(int);
+  MO_ = getValue<uint8_t>(i);i = i + sizeof(MO_);
+  UM_ = getValue<uint8_t>(i);i = i + sizeof(UM_);
+  MF_ = getValue<float>(i);  i = i + sizeof(MF_);
+  EC_ = getValue<int>(i);    i = i + sizeof(EC_);
+  PX_ = getValue<int>(i);    i = i + sizeof(PX_);
+  VX_ = getValue<float>(i);  i = i + sizeof(VX_);
+  IQ_ = getValue<float>(i);  i = i + sizeof(IQ_);
+  ID_ = getValue<float>(i);  i = i + sizeof(ID_);
+  MC_ = getValue<float>(i);  i = i + sizeof(MC_);
+  BV_ = getValue<int>(i);    i = i + sizeof(BV_);
+  TI_ = getValue<int8_t>(i); i = i + sizeof(TI_);
+  TC_ = getValue<float>(i);  i = i + sizeof(TC_);
+  JV_ = getValue<float>(i);  i = i + sizeof(JV_);
+  PA_ = getValue<int>(i);    i = i + sizeof(PA_);
+  PR_ = getValue<int>(i);    i = i + sizeof(PR_);
+  ac_ = getValue<uint8_t>(i);i = i + sizeof(ac_);
+  ef_ = getValue<uint8_t>(i);i = i + sizeof(ef_);
+  ps_ = getValue<uint8_t>(i);i = i + sizeof(ps_);
+  // elc_= getValue<int>(i);    i = i + sizeof(elc_);
 
   int n = telemetry_.size();
   crc_ = getValue<uint16_t>(n - 6); 

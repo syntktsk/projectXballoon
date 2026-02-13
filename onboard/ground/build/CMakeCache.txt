@@ -256,7 +256,7 @@ Ruby_ARCHHDR_DIR:PATH=/Users/syn/.rbenv/versions/3.2.8/include/ruby-3.2.0/arm64-
 Ruby_ARCH_DIR:PATH=/Users/syn/.rbenv/versions/3.2.8/lib/ruby/3.2.0/arm64-darwin24
 
 //Path to a file.
-Ruby_CONFIG_INCLUDE_DIR:PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework/Headers
+Ruby_CONFIG_INCLUDE_DIR:PATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework/Headers
 
 //Path to a program.
 Ruby_EXECUTABLE:FILEPATH=/Users/syn/.rbenv/versions/3.2.8/bin/ruby
@@ -268,10 +268,10 @@ Ruby_HAS_VENDOR_RUBY:BOOL=
 Ruby_HDR_DIR:PATH=/Users/syn/.rbenv/versions/3.2.8/include/ruby-3.2.0
 
 //Path to a file.
-Ruby_INCLUDE_DIR:PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework/Headers
+Ruby_INCLUDE_DIR:PATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework/Headers
 
 //Path to a library.
-Ruby_LIBRARY:FILEPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework
+Ruby_LIBRARY:FILEPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework
 
 //The Ruby ruby-lib dir
 Ruby_RUBY_LIB_DIR:PATH=/Users/syn/.rbenv/versions/3.2.8/lib/ruby/3.2.0
@@ -298,10 +298,10 @@ Ruby_VERSION_MINOR:PATH=2
 Ruby_VERSION_PATCH:PATH=8
 
 //Header include-directory for Cyrus libsasl2
-SASL2_INCLUDE_DIR:PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include
+SASL2_INCLUDE_DIR:PATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include
 
 //Library file for Cyrus libsasl2
-SASL2_LIBRARY:FILEPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libsasl2.tbd
+SASL2_LIBRARY:FILEPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/libsasl2.tbd
 
 //Path to a file.
 SWIG_DIR:PATH=/opt/homebrew/Cellar/swig/4.3.1/share/swig/4.3.1
@@ -481,9 +481,9 @@ CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding Ruby
-FIND_PACKAGE_MESSAGE_DETAILS_Ruby:INTERNAL=[/Users/syn/.rbenv/versions/3.2.8/bin/ruby][/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework/Headers][/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework][/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework/Headers][v3.2.8(2.0)]
+FIND_PACKAGE_MESSAGE_DETAILS_Ruby:INTERNAL=[/Users/syn/.rbenv/versions/3.2.8/bin/ruby][/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework/Headers][/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework][/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Ruby.framework/Headers][v3.2.8(2.0)]
 //Details about finding SASL2
-FIND_PACKAGE_MESSAGE_DETAILS_SASL2:INTERNAL=[2.1.26][/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include][/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/lib/libsasl2.tbd][v2.1.26(2.0)]
+FIND_PACKAGE_MESSAGE_DETAILS_SASL2:INTERNAL=[2.1.26][/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include][/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/libsasl2.tbd][v2.1.26(2.0)]
 //Details about finding SWIG
 FIND_PACKAGE_MESSAGE_DETAILS_SWIG:INTERNAL=[/opt/homebrew/bin/swig][/opt/homebrew/Cellar/swig/4.3.1/share/swig/4.3.1][ ][v4.3.1()]
 //Details about finding Threads

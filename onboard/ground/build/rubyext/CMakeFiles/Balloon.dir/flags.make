@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/clang++
 CXX_DEFINES = -DBalloon_EXPORTS
 
-CXX_INCLUDES = -I/Users/syn/balloon/onboard/ground/include -I/Users/syn/ANLNext/include -I/Users/syn/include -I/Users/syn/balloon/onboard/ground/../source/modules/include -I/Users/syn/balloon/onboard/ground/../source/core/include -I/opt/homebrew/include/bsoncxx/v_noabi -I/opt/homebrew/include/mongocxx/v_noabi -I/opt/homebrew/include -I/Users/syn/.rbenv/versions/3.2.8/include/ruby-3.2.0 -I/Users/syn/.rbenv/versions/3.2.8/include/ruby-3.2.0/arm64-darwin24 -I/opt/homebrew/include/bsoncxx/v_noabi/bsoncxx -I/opt/homebrew/include/mongocxx/v_noabi/mongocxx
+CXX_INCLUDES = -I/Users/syn/balloon/onboard/ground/include -I/Users/syn/ANLNext/include -I/Users/syn/include -I/Users/syn/balloon/onboard/ground/../source/modules/include -I/Users/syn/balloon/onboard/ground/../source/core/include -I/Users/syn/balloon/onboard/ground/../source/gl860 -I/opt/homebrew/include/bsoncxx/v_noabi -I/opt/homebrew/include/mongocxx/v_noabi -I/opt/homebrew/include -I/Users/syn/.rbenv/versions/3.2.8/include/ruby-3.2.0 -I/Users/syn/.rbenv/versions/3.2.8/include/ruby-3.2.0/arm64-darwin24 -I/opt/homebrew/include/bsoncxx/v_noabi/bsoncxx -I/opt/homebrew/include/mongocxx/v_noabi/mongocxx
 
 CXX_FLAGSarm64 = -O2 -std=gnu++17 -arch arm64 -fPIC
 

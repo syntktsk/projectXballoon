@@ -20,7 +20,6 @@ class MyApp < ANL::ANLApp
         baudrate: 1200.to_i,
         OU_socket_serverIp: "192.168.1.138", #Ou
         OU_socket_port: 9090,
-        chatter: 1, 
         binary_filename_base: "/home/syn/data/command/command"
         ) do |m|
           m.set_singleton(1)

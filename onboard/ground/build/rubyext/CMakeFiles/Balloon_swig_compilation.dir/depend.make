@@ -22,11 +22,13 @@ rubyext/CMakeFiles/Balloon.dir/BalloonRUBY.stamp: \
  /Users/syn/balloon/onboard/source/core/include/CommandDefinition.hh \
  /Users/syn/balloon/onboard/source/core/include/SerialCommunication.hh \
  /Users/syn/balloon/onboard/source/core/include/TelemetryDefinition.hh \
+ /Users/syn/balloon/onboard/source/gl860/GL860main.hh \
  /Users/syn/balloon/onboard/source/modules/include/InterpretTelemetry.hh \
  /Users/syn/balloon/onboard/source/modules/include/MongoDBClient.hh \
  /Users/syn/balloon/onboard/source/modules/include/PushToMongoDB.hh \
  /Users/syn/balloon/onboard/source/modules/include/ReceiveTelemetry.hh \
  /Users/syn/balloon/onboard/source/modules/include/SocketTransceiver.hh \
+ /Users/syn/balloon/onboard/source/modules/include/eu_struct.hh \
  /Users/syn/include/hsquicklook/MongoDBClient.hh \
  /opt/homebrew/include/boost/any.hpp \
  /opt/homebrew/include/boost/any/bad_any_cast.hpp \

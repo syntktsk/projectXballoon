@@ -307,7 +307,7 @@ void SendTelemetry::inputEUInfo(){
   std::cout << "DEBUG: inputEUInfo called with type: " << telemetryType_ << std::endl;
   if (telemetryType_ == 3 || telemetryType_ == 9) {
     // std::cout << "DEBUG: Setting Elmo: " << receiveEUResponse_->EUlastcommand() << std::endl;
-    telemdef_->setTelemetryElmo(receiveEUResponse_->GetElmoStatus())
+    telemdef_->setElmoData(receiveEUResponse_->getElmoStatus());
     // telemdef_->setMotorOnOff(receiveEUResponse_->MotorOnOff());
     // telemdef_->setUnitMode(receiveEUResponse_->UnitMode());
     // telemdef_->setMoterFault(receiveEUResponse_->MoterFault());
@@ -330,7 +330,7 @@ void SendTelemetry::inputEUInfo(){
   }
 
   if (telemetryType_ == 2 || telemetryType_ == 9) {
-    telemdef_->setTelemetryGnss(receiveEUResponse_->GetGnssStatus())
+    telemdef_->setGNSSData(receiveEUResponse_->getGnssStatus());
     // telemdef_->setLatitude(receiveEUResponse_->latitude());
     // telemdef_->setLongitude(receiveEUResponse_->longitude());
     // telemdef_->setHeight(receiveEUResponse_->height());

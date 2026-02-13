@@ -269,11 +269,15 @@ vector
 -
 
 /Users/syn/balloon/onboard/source/core/include/TelemetryDefinition.hh
+eu_struct.hh
+/Users/syn/balloon/onboard/source/core/include/eu_struct.hh
 iostream
 -
 vector
 -
 sys/time.h
+-
+GL860main.hh
 -
 CRC16.hh
 /Users/syn/balloon/onboard/source/core/include/CRC16.hh
@@ -282,6 +286,22 @@ BinaryFileManipulater.hh
 cstring
 -
 cmath
+-
+
+/Users/syn/balloon/onboard/source/gl860/GL860main.hh
+string
+-
+vector
+-
+sys/socket.h
+-
+arpa/inet.h
+-
+unistd.h
+-
+netinet/in.h
+-
+netinet/tcp.h
 -
 
 /Users/syn/balloon/onboard/source/modules/include/InterpretTelemetry.hh
@@ -359,6 +379,8 @@ condition_variable
 -
 optional
 -
+
+/Users/syn/balloon/onboard/source/modules/include/eu_struct.hh
 
 /Users/syn/include/hsquicklook/MongoDBClient.hh
 memory

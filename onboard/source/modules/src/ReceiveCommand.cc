@@ -8,7 +8,11 @@ namespace balloon {
 
 ReceiveCommand::ReceiveCommand()
   : baudrate_(B1200), openMode_(O_RDWR)
-{
+{ 
+  EU_serverIp_ = "";
+  OU_serverIp_ = "";
+  communicationType_ = "";
+  serialPath_ = "";
   serialPath_ = "/dev/null";
   binaryFilenameBase_ = "Command";
   comdef_ = std::make_shared<CommandDefinition>(); 
@@ -21,23 +25,21 @@ ReceiveCommand::~ReceiveCommand() = default;
 
 ANLStatus ReceiveCommand::mod_define()
 {
+  define_parameter("baudrate", &mod_class::baudrate_);
+  define_parameter("serial_path", &mod_class::serialPath_);
+  define_parameter("open_mode", &mod_class::openMode_);
   define_parameter("timeout_sec", &mod_class::timeoutSec_);
   define_parameter("save_command", &mod_class::saveCommand_);
   define_parameter("binary_filename_base", &mod_class::binaryFilenameBase_);
   define_parameter("num_command_per_file", &mod_class::numCommandPerFile_);
   define_parameter("chatter", &mod_class::chatter_);
-
   define_parameter("EU_socket_serverIp", &mod_class::EU_serverIp_);
   define_parameter("EU_socket_port", &mod_class::EU_port_);
   define_parameter("communication_type", &mod_class::communicationType_);
-  define_parameter("serial_path", &mod_class::serialPath_);
-  define_parameter("baudrate", &mod_class::baudrate_);
   define_parameter("OU_socket_serverIp", &mod_class::OU_serverIp_);
   define_parameter("OU_socket_port", &mod_class::OU_port_);
-
   return AS_OK;
 }
-
 ANLStatus ReceiveCommand::mod_initialize()
 {
   const std::string send_telem_md = "SendTelemetry";

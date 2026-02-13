@@ -19,6 +19,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/Users/syn/include"
   "/Users/syn/balloon/onboard/ground/../source/modules/include"
   "/Users/syn/balloon/onboard/ground/../source/core/include"
+  "/Users/syn/balloon/onboard/ground/../source/gl860"
   "/opt/homebrew/include/bsoncxx/v_noabi"
   "/opt/homebrew/include/mongocxx/v_noabi"
   "/opt/homebrew/include"

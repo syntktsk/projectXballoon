@@ -1,0 +1,44 @@
+# Command list for Bacs
+
+### Software reset
+Prepare_Software_Stop
+Exec_Software_Stop
+
+### Elmo Control
+Elmo_control
+
+### Get Status
+Get_Raspi_Status
+Get_All_Status
+Get_GNSS_Status
+Get_Elmo_Status
+Get_Relay_Status
+
+### Preset Parameter
+Parameter_Set
+
+### Change Parameter 
+Setting_TC[A]
+Setting_JV[]
+Setting_PA[]
+Setting_PR[]
+Setting_MO
+Setting_UM
+
+### Control gl860
+Optional_gl860
+Reset_gl860
+Stat_gl860
+
+### Optional Command
+Optional_Command
+
+### For test
+Other
+
+### Raspi Control
+Reset_Error
+Prepare_Shutdown
+Prepare_Reboot
+Exec_Shutdown
+Exec_Reboot

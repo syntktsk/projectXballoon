@@ -122,7 +122,7 @@ public:
   
   void setTelemetryType(uint16_t v) { telemetryType_ = v;}
 // setterForGNSS
-  void setElmoData(const ess2& v) {gnss_status = v; }
+  void setGNSSData(const ess2& v) { gnss_status = v; }
   void setLatitude(float v){ la_ = v; }
   void setLongitude(float v){ lo_ = v; }
   void setHeight(float v){ he_ = v; }
@@ -133,8 +133,8 @@ public:
 
 // ForElmo　ここは変わる
   void setElmoData(const ess1& v) {elmo_status = v; }
-  void setMotorOnOff(int v){ MO_ = v; }
-  void setUnitMode(int v){ UM_ = v; }
+  void setMotorOnOff(uint8_t v){ MO_ = v; }
+  void setUnitMode(uint8_t v){ UM_ = v; }
   void setMoterFault(float v){ MF_ = v; }
   void setErrorCode(int v){ EC_ = v; }
   void setPosition(int v){ PX_ = v; }
@@ -143,15 +143,15 @@ public:
   void setI_Daxis(float v){ ID_ = v; }
   void setMaxCurrent(float v){ MC_ = v; }
   void setBusVoltage(int v){ BV_ = v; }
-  void setTemperatureInfomation(int v){ TI_ = v; }
+  void setTemperatureInfomation(int8_t v){ TI_ = v; }
   void setTorqueCommand(float v){ TC_ = v; }
   void setJogVelocity(float v){ JV_ = v; }
   void setPositionAbusolute(int v){ PA_ = v; }
   void setPositionRelative(int v){ PR_ = v; }
-  void setModeflag(int v){ ac_ = v; }
-  void setEnablefrag(int v){ ef_ = v; }
-  void setParameterset(int v){ ps_ = v; }
-  void setEUlastcommand(int v){ elc_ = v;}
+  void setModeflag(uint8_t v){ ac_ = v; }
+  void setEnablefrag(u_int8_t v){ ef_ = v; }
+  void setParameterset(uint8_t v){ ps_ = v; }
+  void setEUlastcommand(std::string v){ elc_ = v;}
 
 // ninni no mojiretu
   void setOptionalStrings(std::string v){er_ = v;}
@@ -214,7 +214,7 @@ public:
   int modeflag(){ return ac_; }
   int enablefrag(){ return ef_; }
   int parameterset(){ return ps_; }
-  int EUlastcommand(){return elc_;}
+  std::string EUlastcommand(){return elc_;}
 
 // getter of GNSS
   float latitude(){ return la_; }
@@ -281,8 +281,8 @@ private:
 
   // Elmo
   ess1 elmo_status;
-  int MO_ = 0;   // Motor On/OFF 状態 (1=モーター有効, 0=無効)
-  int UM_ = 0;   // Unit Mode = 0,1,2,5
+  uint8_t MO_ = 0;   // Motor On/OFF 状態 (1=モーター有効, 0=無効)
+  uint8_t UM_ = 0;   // Unit Mode = 0,1,2,5
   float MF_ = 0;   // Motor Fault 異常停止要因（モーターが無効化された理由）
   int EC_ = 0;   // Error Code エラーコード
   int PX_ = 0;   // Position 現在位置 [cnt]
@@ -291,15 +291,15 @@ private:
   float ID_ = 0;   // d-axis current (トルクに関わらない電流、通常0付近)
   float MC_ = 0;   // Max Current 設定されている最大電流 (q軸電流制限)
   int BV_ = 0;   // Bus Voltage ドライバ内部バス電圧 [V]
-  int TI_ = 0;   // Temperature Information ドライバ温度 [°C]
+  int8_t TI_ = 0;   // Temperature Information ドライバ温度 [°C]
   float TC_ = 0;   // Torque Command 指令トルク値
   float JV_ = 0;   // Jog Velocity 指令速度（Jog運転時）
   int PA_ = 0;   // Position Abusolute 絶対位置指令
   int PR_ = 0;   // Position Relative 相対位置指令値
-  int ac_ = 0;   // mode flag 運転モード番号 (0~21)
-  int ef_ = 0;   // enable flag 回転可能かどうか (0=回転不可, 1=回転可能)
-  int ps_ = 0;  
-  int elc_= 0;
+  uint8_t ac_ = 0;   // mode flag 運転モード番号 (0~21)
+  uint8_t ef_ = 0;   // enable flag 回転可能かどうか (0=回転不可, 1=回転可能)
+  uint8_t ps_ = 0;  
+  std::string elc_= 0;
 
   ess2 gnss_status;
   float la_ = 0;

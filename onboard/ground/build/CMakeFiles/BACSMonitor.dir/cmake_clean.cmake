@@ -11,6 +11,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/core/src/SerialCommunication.cc.o.d"
   "CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/core/src/TelemetryDefinition.cc.o"
   "CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/core/src/TelemetryDefinition.cc.o.d"
+  "CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/gl860/GL860main.cc.o"
+  "CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/gl860/GL860main.cc.o.d"
   "CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/modules/src/InterpretTelemetry.cc.o"
   "CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/modules/src/InterpretTelemetry.cc.o.d"
   "CMakeFiles/BACSMonitor.dir/Users/syn/balloon/onboard/source/modules/src/MongoDBClient.cc.o"

@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/clang++
 CXX_DEFINES = -DBACSMonitor_EXPORTS
 
-CXX_INCLUDES = -I/Users/syn/balloon/onboard/ground/include -I/Users/syn/ANLNext/include -I/Users/syn/include -I/Users/syn/balloon/onboard/ground/../source/modules/include -I/Users/syn/balloon/onboard/ground/../source/core/include -I/opt/homebrew/include/bsoncxx/v_noabi -I/opt/homebrew/include/mongocxx/v_noabi -I/opt/homebrew/include -I/opt/homebrew/include/bsoncxx/v_noabi/bsoncxx -I/opt/homebrew/include/mongocxx/v_noabi/mongocxx
+CXX_INCLUDES = -I/Users/syn/balloon/onboard/ground/include -I/Users/syn/ANLNext/include -I/Users/syn/include -I/Users/syn/balloon/onboard/ground/../source/modules/include -I/Users/syn/balloon/onboard/ground/../source/core/include -I/Users/syn/balloon/onboard/ground/../source/gl860 -I/opt/homebrew/include/bsoncxx/v_noabi -I/opt/homebrew/include/mongocxx/v_noabi -I/opt/homebrew/include -I/opt/homebrew/include/bsoncxx/v_noabi/bsoncxx -I/opt/homebrew/include/mongocxx/v_noabi/mongocxx
 
 CXX_FLAGSarm64 = -O3 -W -Wall -std=gnu++17 -arch arm64 -fPIC
 
