@@ -43,7 +43,7 @@ void TelemetryDefinition::generateTelemetry()
     generateTelemetryElmo();
     generateTelemetryGNSS();
     generateTelemetryHK();
-
+    generateTelemetryRelays();
   }
   else if (static_cast<int>(telemetryType_)==static_cast<int>(TelemetryType::Optional)) {
     generateTelemetryOption();
@@ -62,49 +62,79 @@ void TelemetryDefinition::generateTelemetry()
 
 void TelemetryDefinition::generateTelemetryHK()
 {
-  addValue<uint32_t>(lastCommandIndex_);
-  addValue<uint16_t>(lastCommandCode_);
-  addValue<uint16_t>(commandRejectCount_);
+  addValue<uint32_t>(static_cast<uint32_t>(lastCommandIndex_));
+  addValue<uint16_t>(static_cast<uint16_t>(lastCommandCode_));
+  addValue<uint16_t>(static_cast<uint16_t>(commandRejectCount_));
   addValue<uint64_t>(softwareErrorCode_);
   writeGL860value(getGL860DataVec_);
 }
 void TelemetryDefinition::generateTelemetryElmo()
 {
-  addValue<int>(elmo_status.MO);
-  addValue<int>(elmo_status.UM);
-  addValue<float>(elmo_status.MF);
+  addValue<uint8_t>(static_cast<uint8_t>(elmo_status.MO));
+  addValue<uint8_t>(static_cast<uint8_t>(elmo_status.UM));
+  addValue<uint8_t>(static_cast<uint8_t>(elmo_status.OB));
+  // addValue<float>(elmo_status.MF);
+  addValue<int32_t>(static_cast<int32_t>(elmo_status.MF * mul));
+  // std::cout <<"DEBUG MF become :"<<static_cast<int32_t>(elmo_status.MF * mul)<<std::endl;
   addValue<int>(elmo_status.EC);
   addValue<int>(elmo_status.PX);
-  addValue<float>(elmo_status.VX);
-  addValue<float>(elmo_status.IQ);
-  addValue<float>(elmo_status.ID);
-  addValue<float>(elmo_status.MC);
+  addValue<int32_t>(static_cast<int32_t>(elmo_status.VX * mul));
+  addValue<int32_t>(static_cast<int32_t>(elmo_status.IQ * mul));
+  addValue<int32_t>(static_cast<int32_t>(elmo_status.ID * mul));
+  addValue<int32_t>(static_cast<int32_t>(elmo_status.MC * mul));
+  // addValue<float>(elmo_status.VX);
+  // addValue<float>(elmo_status.IQ);
+  // addValue<float>(elmo_status.ID);
+  // addValue<float>(elmo_status.MC);
   addValue<int>(elmo_status.BV);
-  addValue<int>(elmo_status.TI);
-  addValue<float>(elmo_status.TC);
-  addValue<float>(elmo_status.JV);
+  addValue<int8_t>(static_cast<int8_t>(elmo_status.TI));
+  addValue<int32_t>(static_cast<int32_t>(elmo_status.TC * mul));
+  addValue<int32_t>(static_cast<int32_t>(elmo_status.JV * mul));
+  // addValue<float>(elmo_status.TC);
+  // addValue<float>(elmo_status.JV);
   addValue<int>(elmo_status.PA);
   addValue<int>(elmo_status.PR);
-  addValue<int>(elmo_status.ac);
-  addValue<int>(elmo_status.ef);
-  addValue<int>(elmo_status.ps);
-  // addValue<int>(elc);
+  addValue<uint8_t>(static_cast<uint8_t>(elmo_status.ac));
+  addValue<uint8_t>(static_cast<uint8_t>(elmo_status.ef));
+  addValue<uint8_t>(static_cast<uint8_t>(elmo_status.ps));
+  addValue<int32_t>(static_cast<int32_t>(elmo_status.en));
+  addValue<int32_t>(static_cast<int32_t>(elmo_status.az * mul));
+  // addValue<float>(static_cast<float>(elmo_status.az));
+  addValue<int32_t>(static_cast<int32_t>(elmo_status.hi));
+  lc_ = elmo_status.lc;
+  const int size = lc_.size();
+  int pad_size = 16 - size;
+  for (int i=0; i< size ; i++){ 
+    char unit = lc_[i];
+    telemetry_.push_back(unit);
+  }
+  for (int j=0; j < pad_size ; j++){
+    telemetry_.push_back('\0');
+  }
 }
 
 void TelemetryDefinition::generateTelemetryGNSS()
 {
-  addValue<float>(gnss_status.la);
-  addValue<float>(gnss_status.lo);
-  addValue<float>(gnss_status.he);
-  addValue<float>(gnss_status.ya);
-  addValue<float>(gnss_status.pi);
-  addValue<float>(gnss_status.ro);
-  addValue<float>(gnss_status.te);
-
+//   addValue<float>(gnss_status.la);
+//   addValue<float>(gnss_status.lo);
+//   addValue<float>(gnss_status.he);
+//   addValue<float>(gnss_status.ya);
+//   addValue<float>(gnss_status.pi);
+//   addValue<float>(gnss_status.ro);
+//   addValue<float>(gnss_status.te);
+// // 緯度・経度・高度・姿勢などは範囲が広いため int32_t で処理
+  addValue<int32_t>(static_cast<int32_t>(gnss_status.la * mul));
+  addValue<int32_t>(static_cast<int32_t>(gnss_status.lo * mul));
+  addValue<int32_t>(static_cast<int32_t>(gnss_status.he * mul));
+  addValue<int32_t>(static_cast<int32_t>(gnss_status.ya * mul));
+  addValue<int32_t>(static_cast<int32_t>(gnss_status.pi * mul));
+  addValue<int32_t>(static_cast<int32_t>(gnss_status.ro * mul));
+  addValue<int32_t>(static_cast<int32_t>(gnss_status.te * mul));
 }
 
 void TelemetryDefinition::generateTelemetryRelays()
-{
+{ 
+  addValue<uint32_t>(relay_);
 }
 
 void TelemetryDefinition::generateTelemetryOption()
@@ -164,6 +194,7 @@ void TelemetryDefinition::writeGL860value(std::vector<int16_t>& getGL860DataVec_
   for (int i=0; i<buf_size; i++){
     addValue<int16_t>(HKvalue[i]);
   }
+
 }
 
 void TelemetryDefinition::writeGL860status(std::vector<uint8_t>& range_info_)
@@ -206,49 +237,56 @@ bool TelemetryDefinition::setTelemetry(const std::vector<uint8_t>& v)
   telemetry_ = v;
   
   uint16_t type = getValue<uint16_t>(4);
-  const int whole_telemetry_len = 28+28+72+16+40+4;//Header/Footer,ess1,ess2,hk,gl860
-  const int hk_telemetry_len = 28+20+44;
-  const int Elmo_telemetry_len = 28+72;
-  const int GNSS_telemetry_len = 28+28;
-  const int Relays_telemetry_len = 28;
-  const int  optional_telemetry_len=28+16;
-  const int  gl860_telemetry_len=28+32+32;
+  const int whole_telemetry_len = 203;//28+GNSSSize_+elmoSize_+optSize_+hkSize_;
+  const int hk_telemetry_len = 28+hkSize_;
+  const int Elmo_telemetry_len = 28+elmoSize_;
+  const int GNSS_telemetry_len = 28+GNSSSize_;
+  const int Relays_telemetry_len = 28+relaysSize_;
+  const int  optional_telemetry_len=28+optSize_;
+  const int  gl860_telemetry_len=28+gl860Size_;
   if (type==9) {
     if (n!=whole_telemetry_len) {
-      std::cerr << "Telemetry Whole: Telemetry length is not correct: n = " << n << std::endl;
+      std::cerr << "Telemetry Whole: Telemetry length is not correct: n = " << n << ". It's should be "<< whole_telemetry_len << std::endl;
+      telemetryType_ = 0;
       return false;
     }
   }else if (type==1) {
     if (n!=hk_telemetry_len) {
       std::cerr << "Telemetry HK: Telemetry length is not correct: n = " << n << std::endl;
+      telemetryType_ = 0;
       return false;
     }
   }else if (type==3) {
     if (n!=Elmo_telemetry_len) {
       std::cerr << "Telemetry Elmo Status: Telemetry length is not correct: n = " << n << std::endl;
+      telemetryType_ = 0;
       return false;
     }
   }  else if (type==2) {
     if (n!=GNSS_telemetry_len) {
       std::cerr << "Telemetry GNSS Status: Telemetry length is not correct: n = " << n << std::endl;
+      telemetryType_ = 0;
       return false;
     }
   }
   else if (type==4) {
     if (n!=Relays_telemetry_len) {
       std::cerr << "Telemetry Relay Status: Telemetry length is not correct: n = " << n << std::endl;
+      telemetryType_ = 0;
       return false;
     }
   }
   else if (type==5) {
     if (n!=optional_telemetry_len) {
       std::cerr << "Telemetry Status: Telemetry length is not correct: n = " << n << std::endl;
+      telemetryType_ = 0;
       return false;
     }
   }
   else if (type==6) {
     if (n!=gl860_telemetry_len) {
       std::cerr << "Telemetry Status: Telemetry length is not correct: n = " << n << std::endl;
+      telemetryType_ = 0;
       return false;
     }
   }
@@ -259,7 +297,6 @@ bool TelemetryDefinition::setTelemetry(const std::vector<uint8_t>& v)
   for (int i=0; i<n-6; i++) {
     telem_without_fotter.push_back(telemetry_[i]);
   }
-
   uint16_t crc_calc = calcCRC16(telem_without_fotter);
   uint16_t crc_attached = getValue<uint16_t>(n-6);
   // これなんだ
@@ -279,13 +316,13 @@ bool TelemetryDefinition::setTelemetry(const std::vector<uint8_t>& v)
 }
 
 void TelemetryDefinition::interpret()
-{
+{ std::cout << "koreyatteru???"<<std::endl;
   startCode_ = getValue<uint32_t>(0);
   telemetryType_ = getValue<uint16_t>(4);
-  timeNow_.tv_sec = getValue<int32_t>(8);
-  timeNow_.tv_usec = getValue<int32_t>(12);
-  telemetryIndex_ = getValue<uint32_t>(16);
-  runID_ = getValue<int32_t>(20);
+  timeNow_.tv_sec = getValue<int32_t>(6);
+  timeNow_.tv_usec = getValue<int32_t>(10);
+  telemetryIndex_ = getValue<uint32_t>(14);
+  runID_ = getValue<int32_t>(18);
   if (static_cast<int>(telemetryType_)==static_cast<int>(TelemetryType::HK)) {
     interpretHK();
   }
@@ -304,8 +341,8 @@ void TelemetryDefinition::interpret()
   else if (static_cast<int>(telemetryType_)==static_cast<int>(TelemetryType::Optional)) {
     interpretOption(22);
   }
-    else if (static_cast<int>(telemetryType_)==static_cast<int>(TelemetryType::GL860)) {
-    interpretOption(22);
+  else if (static_cast<int>(telemetryType_)==static_cast<int>(TelemetryType::GL860)) {
+    interpretGL860option();
   }
   else {
     std::cerr << "could not interpret telemetry: telemetry_type = " << telemetryType_ << std::endl;
@@ -313,39 +350,77 @@ void TelemetryDefinition::interpret()
 }
 
 void TelemetryDefinition::interpretWhole(){
-  printf("\n!!! INTERPRET START !!! size=%d\n", (int)telemetry_.size());
+  // printf("\n!!! INTERPRET START !!! size=%d\n", (int)telemetry_.size());
   int i = 22; 
-  MO_ = getValue<int>(i); i += 4;
-  UM_ = getValue<int>(i); i += 4;
-  MF_ = getValue<float>(i); i += 4;
-  EC_ = getValue<int>(i); i += 4;
-  PX_ = getValue<int>(i); i += 4;
-  VX_ = getValue<float>(i); i += 4;
-  IQ_ = getValue<float>(i); i += 4;
-  ID_ = getValue<float>(i); i += 4;
-  MC_ = getValue<float>(i); i += 4;
-  BV_ = getValue<int>(i); i += 4;
-  TI_ = getValue<int>(i); i += 4;
-  TC_ = getValue<float>(i); i += 4;
-  JV_ = getValue<float>(i); i += 4;
-  PA_ = getValue<int>(i); i += 4;
-  PR_ = getValue<int>(i); i += 4;
-  ac_ = getValue<int>(i); i += 4;
-  ef_ = getValue<int>(i); i += 4;
-  ps_ = getValue<int>(i); i += 4;
-  elc_= getValue<int>(i); i += 4;
-  la_ = getValue<float>(i); i += 4;
-  lo_ = getValue<float>(i); i += 4;
-  he_ = getValue<float>(i); i += 4;
-  ya_ = getValue<float>(i); i += 4;
-  pi_ = getValue<float>(i); i += 4;
-  ro_ = getValue<float>(i); i += 4;
-  te_ = getValue<float>(i); i += 4;
-  lastCommandIndex_=getValue<int>(i); i += 4;
-  lastCommandCode_=getValue<int>(i); i += 4;
-  commandRejectCount_=getValue<int>(i); i += 4;
-  softwareErrorCode_=getValue<uint64_t>(i);
-  printf("\n!!! software error code !!! value=%lu\n", softwareErrorCode_);
+  MO_ = getValue<uint8_t>(i);i = i + sizeof(MO_);
+  UM_ = getValue<uint8_t>(i);i = i + sizeof(UM_);
+  OB_ = getValue<uint8_t>(i);i = i + sizeof(OB_);
+  MF_ = getValue<int32_t>(i)/mul; i += 4;
+  // std::cout << "DEBUG: show each num EC ->"<< i <<std::endl;
+  EC_ = getValue<int>(i);    i = i + sizeof(EC_);
+  PX_ = getValue<int>(i);    i = i + sizeof(PX_);
+  VX_ = getValue<int32_t>(i)/mul; i += 4;
+  IQ_ = getValue<int32_t>(i)/mul; i += 4;
+  // std::cout << "DEBUG: show each num  ID ->"<< i <<std::endl;
+  ID_ = getValue<int32_t>(i)/mul; i += 4;
+  MC_ = getValue<int32_t>(i)/mul; i += 4;
+  BV_ = getValue<int>(i);    i = i + sizeof(BV_);
+  TI_ = getValue<int8_t>(i); i = i + sizeof(TI_);
+  // std::cout << "DEBUG: show each num TI->"<< i <<std::endl;
+  TC_ = getValue<int32_t>(i)/mul; i += 4;
+  JV_ = getValue<int32_t>(i)/mul; i += 4;
+  PA_ = getValue<int>(i);    i = i + sizeof(PA_);
+  PR_ = getValue<int>(i);    i = i + sizeof(PR_);
+  // std::cout << "DEBUG: show each num AC->"<< i <<std::endl;
+  ac_ = getValue<uint8_t>(i);i = i + sizeof(ac_);
+  ef_ = getValue<uint8_t>(i);i = i + sizeof(ef_);
+  ps_ = getValue<uint8_t>(i);i = i + sizeof(ps_);
+  en_ = getValue<int32_t>(i);i = i + sizeof(en_);
+  az_ = getValue<int32_t>(i)/mul; i += 4;
+  hi_ = getValue<int32_t>(i);i = i + sizeof(hi_);
+  const size_t DATA_LENGTH = 16;
+  lc_.clear();
+  for (size_t j = 0; j < DATA_LENGTH; ++j) {
+    size_t current_index = i + j;
+    uint8_t byte_value = telemetry_[current_index];
+
+    if (byte_value == '\0') {
+        break;
+    }
+    lc_.push_back(static_cast<char>(byte_value));
+  }
+  i = i + DATA_LENGTH;
+  la_ = getValue<int32_t>(i)/mul; i += 4;
+  lo_ = getValue<int32_t>(i)/mul; i += 4;
+  he_ = getValue<int32_t>(i)/mul; i += 4;
+  ya_ = getValue<int32_t>(i)/mul; i += 4;
+  pi_ = getValue<int32_t>(i)/mul; i += 4;
+  ro_ = getValue<int32_t>(i)/mul; i += 4;
+  te_ = getValue<int32_t>(i)/mul; i += 4;
+  // la_ = getValue<float>(i); i += 4;
+  // lo_ = getValue<float>(i); i += 4;
+  // he_ = getValue<float>(i); i += 4;
+  // ya_ = getValue<float>(i); i += 4;
+  // pi_ = getValue<float>(i); i += 4;
+  // ro_ = getValue<float>(i); i += 4;
+  // te_ = getValue<float>(i); i += 4;
+  lastCommandIndex_=getValue<uint32_t>(i); i += sizeof(lastCommandIndex_); 
+  lastCommandCode_=getValue<uint16_t>(i); i += sizeof(lastCommandCode_);
+  commandRejectCount_=getValue<uint16_t>(i); i += sizeof(commandRejectCount_);
+  softwareErrorCode_=getValue<uint64_t>(i);i += sizeof(softwareErrorCode_);
+  int datanum_ = getValue<int16_t>(i);  i = i + sizeof(int16_t);
+  (void)datanum_;
+  gl860_ground_.clear();
+  for (int ch = 0; ch < 20; ++ch) {
+    int16_t raw_val = getValue<int16_t>(i);
+    i += sizeof(int16_t);
+    float physical_val = static_cast<float>((raw_val) / range_info_[ch]);
+    gl860_ground_.push_back(physical_val);
+  }
+  relay_ = getValue<uint32_t>(i);    i = i + sizeof(relay_);
+  for (i=0; i< 32; i++){
+
+  }
   int n = telemetry_.size();
   crc_ = getValue<uint16_t>(n - 6); 
   stopCode_ = getValue<uint32_t>(n - 4);
@@ -357,18 +432,21 @@ void TelemetryDefinition::interpretHK()
   int datanum_ = getValue<int16_t>(i);  i = i + sizeof(int16_t);
   (void)datanum_;
   gl860_ground_.clear();
-  // 常に20ch分を計算するようにしておくと、後続の処理が安全です
   for (int ch = 0; ch < 20; ++ch) {
     int16_t raw_val = getValue<int16_t>(i);
     i += sizeof(int16_t);
-
-    // 事前に Status解釈で計算しておいた倍率を使う
     float physical_val = static_cast<float>((raw_val) / range_info_[ch]);
-    
     gl860_ground_.push_back(physical_val);
   }
-
-// ロジックはString型まで戻したい
+  uint8_t packed_logic = getValue<uint16_t>(i);
+  gl860_logic_.resize(4);
+  for (int j = 0; j < 4; ++j) {
+    if ((packed_logic & (1 << j)) != 0) {
+        gl860_logic_[j] = "H";
+    } else {
+        gl860_logic_[j] = "L";
+    }
+  }
   crc_ = getValue<uint16_t>(i);i = i + sizeof(uint16_t);
   stopCode_ = getValue<uint32_t>(i);
 }
@@ -381,7 +459,6 @@ void TelemetryDefinition::interpretGL860stat(){
   range_info_.resize(20, 1.0f); // 20ch分を1.0で初期化
 
   for (int j = 0; j < n_total; j += 2) {
-    // 1つ飛ばしで読み取る
     int8_t ch_id = getValue<int8_t>(i); i += 2; // 偶数項：CH番号 (1〜20)
     int8_t range_id = getValue<int8_t>(i); i += 2; // 奇数項：RangeID
 
@@ -392,7 +469,6 @@ void TelemetryDefinition::interpretGL860stat(){
         break;
       }
     }
-    
     int ch_idx = ch_id - 1; 
     if (ch_idx >= 0 && ch_idx < 20) {
       range_info_[ch_idx] = m;
@@ -417,7 +493,6 @@ void TelemetryDefinition::interpretGNSS()
 }
 void TelemetryDefinition::interpretElmo()
 {
-// Elmoの解釈作る
   int i=22;
   MO_ = getValue<uint8_t>(i);i = i + sizeof(MO_);
   UM_ = getValue<uint8_t>(i);i = i + sizeof(UM_);
@@ -437,7 +512,7 @@ void TelemetryDefinition::interpretElmo()
   ac_ = getValue<uint8_t>(i);i = i + sizeof(ac_);
   ef_ = getValue<uint8_t>(i);i = i + sizeof(ef_);
   ps_ = getValue<uint8_t>(i);i = i + sizeof(ps_);
-  // elc_= getValue<int>(i);    i = i + sizeof(elc_);
+  lc_= getValue<int>(i);     i = i + sizeof(lc_);
 
   int n = telemetry_.size();
   crc_ = getValue<uint16_t>(n - 6); 
@@ -446,33 +521,29 @@ void TelemetryDefinition::interpretElmo()
 
 void TelemetryDefinition::interpretRelays()
 {
+  int i=22;
+  relay_ = getValue<uint32_t>(i);i = i + sizeof(relay_);
+  int j;
+  for (j = 0; j < 32; j++) {
+    relaysStatus_[j] = (relay_ >> j) & 1;
+  }
+  int n = telemetry_.size();
+  crc_ = getValue<uint16_t>(n - 6); 
+  stopCode_ = getValue<uint32_t>(n - 4);
 }
 
 void TelemetryDefinition::interpretOption(int header_size)
 {
-  // 1. データ位置と長さの定義
   const size_t HEADER_OFFSET = header_size;
   const size_t DATA_LENGTH = 16;
-
-  // 3. 格納先の文字列 (er_) をクリア
   er_.clear();
-
-  // 4. 該当部分 (22バイト目から16バイト分) をループで読み込み
   for (size_t i = 0; i < DATA_LENGTH; ++i) {
-      
-      // データを取得するインデックス
       size_t current_index = HEADER_OFFSET+ i;
-
-      // 該当する1バイトの値を取得
       uint8_t byte_value = telemetry_[current_index];
 
-      // ヌル文字 (\0) を検出したら、そこで文字列の終わりと判断し、ループを終了
       if (byte_value == '\0') {
           break;
       }
-
-      // uint8_t を char にキャストし、er_ の末尾に追加
-      // （これにより、er_に有効な文字のみが格納される）
       er_.push_back(static_cast<char>(byte_value));
   }
 }
@@ -486,22 +557,22 @@ void TelemetryDefinition::interpretGL860option()
   lastCommandGL860_.clear();
   gl860string_.clear();
   for (size_t i = 0; i < RES_LENGTH; ++i) {
-      size_t current_index = HEADER_OFFSET+ i;
+    size_t current_index = HEADER_OFFSET+ i;
 
-      uint8_t byte_value = telemetry_[current_index];
-      if (byte_value == '\0') {
-          break;
-      }
-      gl860string_.push_back(static_cast<char>(byte_value));
+    uint8_t byte_value = telemetry_[current_index];
+    if (byte_value == '\0') {
+        break;
+    }
+    gl860string_.push_back(static_cast<char>(byte_value));
   }
   for (size_t i = 0; i < CMD_LENGTH; ++i) {
-      size_t current_index = HEADER_OFFSET + RES_LENGTH + i;
+    size_t current_index = HEADER_OFFSET + RES_LENGTH + i;
 
-      uint8_t byte_value = telemetry_[current_index];
-      if (byte_value == '\0') {
-          break;
-      }
-      lastCommandGL860_.push_back(static_cast<char>(byte_value));
+    uint8_t byte_value = telemetry_[current_index];
+    if (byte_value == '\0') {
+        break;
+    }
+    lastCommandGL860_.push_back(static_cast<char>(byte_value));
   }
 }
 void TelemetryDefinition::clear()
@@ -514,5 +585,4 @@ void TelemetryDefinition::writeFile(const std::string& filename, bool append)
   writeVectorToBinaryFile<uint8_t>(filename, append, telemetry_);
 }
 
-
-} /* namespace balloon */
+}

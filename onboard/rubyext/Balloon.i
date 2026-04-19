@@ -9,6 +9,7 @@
 # include "GetRaspiStatus.hh"
 # include "GetGL860Data.hh"
 # include "SendTelemetry.hh"
+# include "RelayControl.hh"
 # include "RunIDManager.hh"
 # include "ShutdownSystem.hh"
 # include "InterpretTelemetry.hh"
@@ -32,6 +33,7 @@ namespace balloon{
     class SPIManager : public anlnext::BasicModule {};
     class GetGL860Data : public anlnext::BasicModule {};
     class SendTelemetry : public anlnext::BasicModule {};
+    class RelayControl : public anlnext::BasicModule {};
     class RunIDManager : public anlnext::BasicModule {};
     class ShutdownSystem : public anlnext::BasicModule {};
     class InterpretTelemetry : public anlnext::BasicModule {};

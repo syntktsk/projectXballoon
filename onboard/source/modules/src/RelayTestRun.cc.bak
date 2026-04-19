@@ -1,0 +1,60 @@
+#include "RelayControl.hh"
+#include <iostream>
+#include <cstring>
+#include <fstream>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
+
+using namespace balloon;
+
+int main(){
+// initialize
+	RelayControl obj;
+	if (obj.ChipSelectArray().empty()) {
+        std::cerr << "No GPIO pins in chipSelectArray_!" << std::endl;
+        return 1;
+    }
+	int gpio = obj.ChipSelectArray()[0];
+	std::string command;
+	std::string response;
+	obj.mod_define();
+	if (obj.mod_initialize() != anlnext::AS_OK) {
+    	std::cerr << "Initialization failed!" << std::endl;
+    	return 1;
+	}
+	std::cout << "You can control gpio: "<< gpio << std::endl;
+
+//analysis
+	while(1){
+		command = "";
+		response = "";
+		std::cout << "enter command num 1:ON 2:OFF 3:GetStatus>" << std::endl;	
+		// std::cin >> command;
+		std::getline(std::cin, command);
+		if (command == "exit" || command == "quit") break;
+		if ( command == "help"){
+			std::cout<<"-----------command example -----------"<<std::endl;
+			std::cout<<"1:TURN ON"<<std::endl;
+			std::cout<<"2:TURN OFF"<<std::endl;
+			std::cout<<"3:Get Status"<<std::endl;
+			std::cout<<"--------------------------------------"<<std::endl;
+			continue;
+		}
+		if (command == "1"){
+			obj.RelayOn(gpio);
+		}else if (command == "2"){
+			obj.RelayOff(gpio);
+		}else if (command == "3"){
+			obj.mod_analyze();
+			std::cout << "a now status is "<< obj.LatestStatus()<<std::endl;
+		}else{
+			std::cout << "unknown number"<<std::endl;
+		}
+	}
+
+//finalize 
+	obj.mod_finalize();
+	std::cout << "safely finished!"<< std::endl;
+	return 0;
+}

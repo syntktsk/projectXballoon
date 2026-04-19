@@ -17,7 +17,7 @@
 #include "ShutdownSystem.hh"
 #include "SocketTransceiver.hh"
 #include "GetGL860Data.hh"
-#include "GL860main.hh"
+#include "RelayControl.hh"
 #include "SendTelemetry.hh"
 #include "RunIDManager.hh"
 using namespace anlnext;
@@ -28,7 +28,8 @@ class ShutdownSystem;
 class SendTelemetry;
 class RunIDManager;
 class SocketTransceiver;
-class GL860main;
+class GetGL860Data;
+class RelayControl;
 
 class ReceiveCommand : public anlnext::BasicModule
 {
@@ -52,13 +53,12 @@ public:
 
   std::shared_ptr<SocketTransceiver> getSocket() { return eu_; }
 
+
   uint16_t CommandCode() { return (singleton_self()->comdef_)->Code(); }
   uint32_t CommandIndex() { return singleton_self()->commandIndex_; }
   uint16_t CommandRejectCount() { return singleton_self()->commandRejectCount_; }
-  std::string lastCommandGL860(){return singleton_self()->lastCommandGL860_;}
-  std::string lastReceivedOptionGL860() {return singleton_self()->lastReceivedGL860_;} //singleton_selfがあんま分かってないヨ
-  void setDoYouHaveGL860(bool v) { IhaveGl860Data_ = v; }
-  bool IhaveGL860(){return singleton_self()->IhaveGl860Data_;}
+
+  
 
 private:
   std::vector<uint8_t> buffer_;
@@ -77,7 +77,8 @@ private:
   SendTelemetry* sendTelemetry_ = nullptr;
   ShutdownSystem* shutdownSystem_ = nullptr;
   RunIDManager* runIDManager_ = nullptr;
-  GL860main* GL860main_ = nullptr;
+  GetGL860Data* getGL860Data_ = nullptr;
+  RelayControl* relayControl_ = nullptr;
   ErrorManager* getErrorManager();
 
   //communication
@@ -87,6 +88,9 @@ private:
   std::string serialPath_;
   mode_t openMode_ = O_RDWR;
   bool startReading_ = false;
+  bool rs0_ = false;
+  bool rs1_ = false;
+  bool rs2_ = false;
   int timeoutSec_ = 2;
   constexpr static int bufferSize_ = 200;
   constexpr static int serialReadingTimems_ = 250;
@@ -97,9 +101,7 @@ private:
   std::string communicationType_;
   std::string serverIp_; 
   int port_;
-  std::string lastCommandGL860_;
-  std::string lastReceivedGL860_;
-  bool IhaveGl860Data_;
+  std::string savePath_;
   std::shared_ptr<SocketTransceiver> eu_;
   std::shared_ptr<SocketTransceiver> ou_;
 };

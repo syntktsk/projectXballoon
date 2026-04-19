@@ -33,6 +33,14 @@ public:
   void interpretGL860(const std::string& data);
   void writeDataToFile();
   std::vector<int16_t> getGL860DataVec() {return latestAnalogData_;}
+  
+  std::string lastCommandGL860(){return lastCommandGL860_;}
+  std::string lastReceivedOptionGL860() {return lastReceivedGL860_;} //singleton_selfがあんま分かってないヨ
+  void setGL860Command(std::string v) { lastCommandGL860_ = v; }
+  void setDoYouHaveGL860(bool v) { IhaveGL860_ = v; }
+  void setLastReceivedOpyionGL860(std::string v){ lastReceivedGL860_ = v;}
+  void sendGL860(std::string cmd){ lastReceivedGL860_ = GL860main_ -> sendAndReceive(cmd);}
+  bool IhaveGL860(){return IhaveGL860_;}
 
   private:
   std::shared_ptr<GL860main> GL860main_  = nullptr;
@@ -42,6 +50,7 @@ public:
   std::string tempFile_;
   std::string glTimeStr_;
   std::string path_;
+  std::string filename_;
 
   uint64_t capacityFree_ = 0;
   uint64_t capacityAll_ = 0;
@@ -52,7 +61,9 @@ public:
   
   std::string ip_;
   int port_;
-
+  std::string lastCommandGL860_="";
+  std::string lastReceivedGL860_="";
+  bool IhaveGL860_ = false;
   int DataID_ = 0;
   int numPerFile_ = 2*60*30;
   int currentFileID_ = 0;

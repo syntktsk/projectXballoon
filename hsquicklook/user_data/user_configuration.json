@@ -5,7 +5,7 @@
     "ti_scaling": 64,
     "schema_list": {
         "Main": {
-            "GNSS":"user_data/schema/GNSS/gnss.js",
+            "EU":"user_data/schema/GNSS/gnss.js",
             "HK":"user_data/schema/HK/hk.js",
             "Elmo":"user_data/schema/Elmo/Elmo.js"
         }

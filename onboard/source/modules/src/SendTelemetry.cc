@@ -1,9 +1,13 @@
 #include "SendTelemetry.hh"
 #include "ReceiveEUResponse.hh"
+#include "eu_struct.hh"
 #include "GetGL860Data.hh"
-#include "GetRelayStatus.hh"
+#include "RelayControl.hh"
+#include "RelayControl.hh"
 #include <anlnext/ANLManager.hh>
 #include <anlnext/BasicModule.hh>
+#include <sys/time.h> // gettimeofday用
+#include <ctime>    // localtime, strftime用
 using namespace anlnext;
 
 namespace balloon {
@@ -16,7 +20,7 @@ SendTelemetry::SendTelemetry()
   serialPath_ = "/dev/null";
   baudrate_ = B57600;
   openMode_ = O_RDWR;
-
+  savePath_ = "";
 }
 
 SendTelemetry::~SendTelemetry() = default;
@@ -32,6 +36,7 @@ ANLStatus SendTelemetry::mod_define()
   // シリアル通信パラメータ
   define_parameter("serial_path", &mod_class::serialPath_);
   define_parameter("baudrate", &mod_class::baudrate_);
+  define_parameter("save_path", &mod_class::savePath_);
   // ソケット通信パラメータ
   define_parameter("OU_socket_serverIp", &mod_class::OU_serverIp_);
   define_parameter("OU_socket_port", &mod_class::OU_port_);
@@ -51,13 +56,13 @@ ANLStatus SendTelemetry::mod_initialize()
   if (exist_module(get_raspi_status_md)) {
     get_module_NC(get_raspi_status_md, &getRaspiStatus_);
   }
-  const std::string get_relay_status_md = "GetRelayStatus";
-  if (exist_module(get_relay_status_md)) {
-    get_module_NC(get_relay_status_md, &getRelayStatus_);
-  }
   const std::string num_gl860_data = "GetGL860Data";
   if (exist_module(num_gl860_data)) {
     get_module_NC(num_gl860_data, &getGL860Data_);
+  }
+  const std::string relay_control_md = "RelayControl";
+  if (exist_module(relay_control_md)) {
+    get_module_NC(relay_control_md, &relayControl_);
   }
   const std::string receive_command_md = "ReceiveCommand";
   if (exist_module(receive_command_md)) {
@@ -91,26 +96,34 @@ ANLStatus SendTelemetry::mod_initialize()
 
   int ground_status = 0;
   if (communicationType_ == "serial") {
-      // 地上系本番: Serial通信 (sc_を初期化)
-      sc_ = std::make_shared<SerialCommunication>(serialPath_, baudrate_, openMode_);
-      ground_status = sc_->initialize();
-      
+    // 地上系本番: Serial通信 (sc_を初期化)
+    sc_ = std::make_shared<SerialCommunication>(serialPath_, baudrate_, openMode_);
+    ground_status = sc_->initialize();
+    /*追加したよ〜これで動くのは動くけど、少しダメな気がするから、ここは要改善*/
+    std::cout << "DEBUG: Force setting AMA2 to 57600bps via system command..." << std::endl;
+    std::string cmd = "stty -F /dev/ttyAMA2 57600 raw -echo min 1 time 0";
+    system(cmd.c_str()); 
+    // その後、もう一度速度を確認してみる
+    struct termios t;
+    tcgetattr(sc_->FD(), &t);
+    std::cout << "DEBUG: Speed after force reset: " << cfgetispeed(&t) << std::endl;
+    /*ここまでね*/  
   } else if (communicationType_ == "socket") {
-      // 地上系テスト: Socket通信 (ou_を初期化)
-      ou_ = std::make_shared<SocketTransceiver>(OU_serverIp_, OU_port_);
-      ground_status = ou_->initialize(true);
+    // 地上系テスト: Socket通信 (ou_を初期化)
+    ou_ = std::make_shared<SocketTransceiver>(OU_serverIp_, OU_port_);
+    ground_status = ou_->initialize(true);
 
   } else {
-      // 未知の通信タイプ
-      std::cerr << "Error in SendTelemetry::mod_initialize: Unknown ground communication type: " 
-                << communicationType_ << std::endl;
-      getErrorManager()->setError(ErrorType::SEND_TELEMETRY_UNKNOWN_COMM_TYPE_ERROR);
-      return AS_ERROR; 
+    // 未知の通信タイプ
+    std::cerr << "Error in SendTelemetry::mod_initialize: Unknown ground communication type: " 
+              << communicationType_ << std::endl;
+    getErrorManager()->setError(ErrorType::SEND_TELEMETRY_UNKNOWN_COMM_TYPE_ERROR);
+    return AS_ERROR; 
   }
   if (ground_status != 0) {
-      std::cerr << "Error in SendTelemetry::mod_initialize: Ground communication initialization failed." << std::endl;
-      // エラータイプは、切り替え時のエラーとして汎用的なものを使う
-      getErrorManager()->setError(ErrorType::SEND_TELEMETRY_COMMUNICATION_ERROR); 
+    std::cerr << "Error in SendTelemetry::mod_initialize: Ground communication initialization failed." << std::endl;
+    // エラータイプは、切り替え時のエラーとして汎用的なものを使う
+    getErrorManager()->setError(ErrorType::SEND_TELEMETRY_COMMUNICATION_ERROR); 
   }
 
   return AS_OK;
@@ -118,7 +131,7 @@ ANLStatus SendTelemetry::mod_initialize()
 
 ANLStatus SendTelemetry::mod_analyze()
 {
-  if (!eu_ || !ou_) {
+  if (!eu_ && !ou_) {
     std::cerr << "Error in SendTelemetry::mod_initialize: socket in not opened" << std::endl;
     return AS_OK; 
   }
@@ -131,20 +144,23 @@ ANLStatus SendTelemetry::mod_analyze()
     return AS_OK;
   }
 
-  if (receiveCommand_->IhaveGL860()){
+  if (getGL860Data_->IhaveGL860()){
+    std::cout << "DEBUG: We recieved a Command about GL860" << std::endl;
     telemetryType_ = 6; 
     inputInfo();
     Sender();
-    receiveCommand_->setDoYouHaveGL860(false);
-    
+    getGL860Data_->setDoYouHaveGL860(false);
+    getGL860Data_->setLastReceivedOpyionGL860("");
     return AS_OK;
   }
 
   auto now = std::chrono::steady_clock::now();
   if (now - lastRegularTelemetryTime_ >= TELEMETRY_INTERVAL) {
+    lastWholeTlm_.clear();
     telemetryType_ = ID_Whole_TELEMETRY; 
     inputInfo();
     Sender(); 
+    lastWholeTlm_ = telemdef_->Telemetry();
     lastRegularTelemetryTime_ = now;
   }
   
@@ -157,7 +173,7 @@ void SendTelemetry::Sender(){
     telemdef_->setTelemetryType(telemetryType_);
     telemdef_->generateTelemetry();
     const std::vector<uint8_t>& telemetry = telemdef_->Telemetry();
-    std::cout << "[SendTelemetry] Attempting to send ID: " << telemetryType_ << " | Size: " << telemetry.size() << " bytes" << std::endl;
+    // std::cout << "[SendTelemetry] Attempting to send ID: " << telemetryType_ << " | Size: " << telemetry.size() << " bytes" << std::endl;
     int status = -1;
     if (communicationType_ == "serial" && sc_ != nullptr) {
         status = sc_->swrite(telemetry);
@@ -168,7 +184,7 @@ void SendTelemetry::Sender(){
         std::cerr << "No communication device available!" << std::endl;
     }
     if (status > 0) {
-        std::cout << "[SendTelemetry] Successfully sent " << status << " bytes." << std::endl;
+        std::cout << "SendTelemetry: Successfully sent " << status << " bytes." << std::endl;
     }
     const bool failed = (status != static_cast<int>(telemetry.size()));    
     if (failed) {
@@ -204,13 +220,11 @@ void SendTelemetry::inputInfo()
   }
   
   if (telemetryType_==1) {
-    // inputDetectorInfo();
     inputHKVesselInfo();
     inputSoftwareInfo();
   }
   else if (telemetryType_==2) {
     inputEUInfo();
-    // GNSSだけ抜けるように何か操作
   }
   else if (telemetryType_==3) {
     inputEUInfo();
@@ -233,37 +247,26 @@ void SendTelemetry::inputInfo()
     std::cerr << "Error in SendTelemetry::inputInfo(): wrong telemetry type " << telemetryType_ << std::endl;
   }
 }
-
-// void SendTelemetry::inputHKVesselInfo()
-// {
-//   std::cout << "HK input Start" <<  std::endl;
-//   telemdef_->setGL860value(getGL860Data_->getGL860DataVec());
-// }
+  
 void SendTelemetry::inputHKVesselInfo()
 {
-  // std::cout << "DEBUG: inputHKVesselInfo - Start" << std::endl;
-
   if (getGL860Data_ == nullptr) {
     std::cout << "CRITICAL: getGL860Data_ is NULL!" << std::endl;
     return;
   }
-
-  // ここで一旦データをローカルに取る
   std::vector<int16_t> data = getGL860Data_->getGL860DataVec();
-  // std::cout << "DEBUG: inputHKVesselInfo - Data size: " << data.size() << std::endl;
-
   if (telemdef_ == nullptr) {
     std::cout << "CRITICAL: telemdef_ is NULL!" << std::endl;
     return;
   }
-
   telemdef_->setGL860value(data);
-  // std::cout << "DEBUG: inputHKVesselInfo - Success" << std::endl;
 }
 
 void SendTelemetry::inputGL860Option(){
-  telemdef_->setGL860option(receiveCommand_->lastCommandGL860());
-  telemdef_->setGL860option(receiveCommand_->lastReceivedOptionGL860());
+  std::string newestData = getGL860Data_->lastCommandGL860() +"->"+ getGL860Data_->lastReceivedOptionGL860();
+  telemdef_->setGL860option(getGL860Data_->lastReceivedOptionGL860());
+  telemdef_->setlastCommandGL860(getGL860Data_->lastCommandGL860());
+  std::cout << "sendTelemetry: gl860 option data was sent" << newestData <<std::endl;
 }
 
 
@@ -295,49 +298,21 @@ void SendTelemetry::inputOptionalInfo()
 
 void SendTelemetry::inputRelayInfo() 
 {
-  if (getRelayStatus_!=nullptr){
-    telemdef_->setRelay_dummy(getRelayStatus_->dummy());
+  if (relayControl_!=nullptr){
+    telemdef_->setRelay(relayControl_->LatestStatus());
   }
 }
 
 void SendTelemetry::inputEUInfo(){
-  std::cout << "DEBUG: inputEUInfo - Start" << std::endl;
+  // std::cout << "DEBUG: inputEUInfo - Start" << std::endl;
   std::string cmd = "rs0";
   eu_->sendASCII(cmd); 
-  std::cout << "DEBUG: inputEUInfo called with type: " << telemetryType_ << std::endl;
+  // std::cout << "DEBUG: inputEUInfo called with type: " << telemetryType_ << std::endl;
   if (telemetryType_ == 3 || telemetryType_ == 9) {
-    // std::cout << "DEBUG: Setting Elmo: " << receiveEUResponse_->EUlastcommand() << std::endl;
     telemdef_->setElmoData(receiveEUResponse_->getElmoStatus());
-    // telemdef_->setMotorOnOff(receiveEUResponse_->MotorOnOff());
-    // telemdef_->setUnitMode(receiveEUResponse_->UnitMode());
-    // telemdef_->setMoterFault(receiveEUResponse_->MoterFault());
-    // telemdef_->setErrorCode(receiveEUResponse_->ErrorCode());
-    // telemdef_->setPosition(receiveEUResponse_->Position());
-    // telemdef_->setVelocity(receiveEUResponse_->Velocity());
-    // telemdef_->setI_Qaxis(receiveEUResponse_->I_Qaxis());
-    // telemdef_->setI_Daxis(receiveEUResponse_->I_Daxis());
-    // telemdef_->setMaxCurrent(receiveEUResponse_->MaxCurrent());
-    // telemdef_->setBusVoltage(receiveEUResponse_->BusVoltage());
-    // telemdef_->setTemperatureInfomation(receiveEUResponse_->TemperatureInfomation());
-    // telemdef_->setTorqueCommand(receiveEUResponse_->TorqueCommand());
-    // telemdef_->setJogVelocity(receiveEUResponse_->JogVelocity());
-    // telemdef_->setPositionAbusolute(receiveEUResponse_->PositionAbusolute());
-    // telemdef_->setPositionRelative(receiveEUResponse_->PositionRelative());
-    // telemdef_->setModeflag(receiveEUResponse_->modeflag());
-    // telemdef_->setEnablefrag(receiveEUResponse_->enablefrag());
-    // telemdef_->setParameterset(receiveEUResponse_->parameterset());
-    // telemdef_->setEUlastcommand(receiveEUResponse_->EUlastcommand());
   }
-
   if (telemetryType_ == 2 || telemetryType_ == 9) {
     telemdef_->setGNSSData(receiveEUResponse_->getGnssStatus());
-    // telemdef_->setLatitude(receiveEUResponse_->latitude());
-    // telemdef_->setLongitude(receiveEUResponse_->longitude());
-    // telemdef_->setHeight(receiveEUResponse_->height());
-    // telemdef_->setYaw(receiveEUResponse_->yaw());
-    // telemdef_->setPitch(receiveEUResponse_->pitch());
-    // telemdef_->setRoll(receiveEUResponse_->roll());
-    // telemdef_->setTemperature(receiveEUResponse_->temperature());
   }
 }
 
@@ -383,5 +358,55 @@ void SendTelemetry::writeTelemetryToFile(bool failed)
   telemdef_->writeFile(filename, app);
   fileIDmp_[type].second++;
 }
+void SendTelemetry::writeEUDataToFile(int id, bool append) {
+  // 1. ファイル名用のタイムスタンプを取得
+  static std::string start_time_str = ""; 
+  if (start_time_str == "" && runIDManager_) {
+    start_time_str = runIDManager_->TimeStampStr();
+  } else if (start_time_str == "") {
+    start_time_str = "20260226000000"; // フォールバック用
+  }
 
+  // 2. 日時を含んだファイル名を作成
+  std::string filename;
+  if (id == 300) {
+    filename = savePath_ + start_time_str + "_rs0.csv";
+  } else if (id == 301) {
+    filename = savePath_ + start_time_str + "_rs1.csv";
+  } else if (id == 302) {
+    filename = savePath_ + start_time_str + "_rs2.csv";
+  }
+
+  // 3. 書き込み処理（ここは append=true で呼び出せば追記される）
+  std::ofstream ofs;
+  if (append) {
+    ofs.open(filename, std::ios::app);
+  } else {
+    ofs.open(filename, std::ios::out);
+  }
+
+  if (!ofs) {
+    std::cerr << "File open error: " << filename << std::endl;
+    return;
+  }
+  struct timeval timeNow_;
+  gettimeofday(&timeNow_, NULL);
+  uint32_t time_stamp = static_cast<uint32_t>(timeNow_.tv_sec);
+
+  ofs << std::to_string(receiveCommand_->CommandIndex()) << "," << time_stamp << ",";
+  if (id == 300) {
+    ofs << receiveEUResponse_->getElmoStatus()<< ",";
+    ofs << receiveEUResponse_->getGnssStatus();
+    std::cout << "SendTelemetry: saved rs0" << std::endl;
+  } else if (id == 301) {
+    ofs << receiveEUResponse_->getElmoStatus();
+    std::cout << "SendTelemetry: saved rs1" << std::endl;
+  } else if (id == 302) {
+    ofs << receiveEUResponse_->getGnssStatus();
+    std::cout << "SendTelemetry: saved rs2" << std::endl;
+  }
+  ofs << "\n";
+  ofs.flush();
+  ofs.close();
+}
 } /* namespace balloon */

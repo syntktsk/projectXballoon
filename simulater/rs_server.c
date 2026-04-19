@@ -9,7 +9,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "elmo_rs_structure.h"
+// #include "elmo_rs_structure.h"
+#include "eu_struct.h"
 
 #define PORT 9998
 #define BUFFER_SIZE 1024
@@ -20,6 +21,7 @@ int main() {
     ess1 data1 = {
         .MO = 0,      
         .UM = 1,
+        .OB = 1,
         .MF = 0,
         .EC = 2,
         .PX = 3,
@@ -35,18 +37,22 @@ int main() {
         .PR = 0,
         .ac = 0,
         .ef = 0,
-        .ps = 0 
+        .ps = 0,
+        .en = 1,
+        .az = 32.5f,
+        .hi = 245,
+        .lc="THIS_IS_TEST."
     };
 
     //GNSSコンパスから読み取った値が、愛媛大のラズパイ(サーバー側)に保存されている。
     ess2 data2 = {
-        .la = 0.0f,  // 緯度
-        .lo = 0.0f,  // 経度
-        .he = 0.0f,  // 海抜高度
-        .ya = 0.0f,  // yaw
-        .pi = 0.0f,  // pitch
-        .ro = 0.0f,  // roll
-        .te = 0.0f   // 温度
+        .la = 1.0f,  // 緯度
+        .lo = 2.0f,  // 経度
+        .he = 3.0f,  // 海抜高度
+        .ya = 4.0f,  // yaw
+        .pi = 5.0f,  // pitch
+        .ro = 6.0f,  // roll
+        .te = 7.0f   // 温度
     };
     //fはfloat(4Bytes)型ということを表す
 

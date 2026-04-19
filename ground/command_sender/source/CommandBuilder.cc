@@ -33,23 +33,31 @@ CommandBuilder::CommandBuilder()
   code_map_["Exec_Reboot"]             = CommandProperty{103, 0};
   code_map_["Prepare_Shutdown"]        = CommandProperty{104, 0};
   code_map_["Prepare_Reboot"]          = CommandProperty{105, 0};
-  code_map_["Get_Relay_Status"]        = CommandProperty{106, 0};
+  code_map_["Get_Relay_Status"]        = CommandProperty{106, 99};
+  code_map_["GPIO_ON"]                 = CommandProperty{107, 1};
+  code_map_["GPIO_OFF"]                = CommandProperty{108, 1};
   code_map_["Exec_Software_Stop"]      = CommandProperty{198, 0};
   code_map_["Prepare_Software_Stop"]   = CommandProperty{199, 0};
-  code_map_["Elmo_control"]            = CommandProperty{200, 0};
-  code_map_["Get_All_Status"]          = CommandProperty{300, 0};
-  code_map_["Get_GNSS_Status"]         = CommandProperty{302, 0};
-  code_map_["Get_Elmo_Status"]         = CommandProperty{301, 0};
-  code_map_["Parameter_Set"]           = CommandProperty{400, 0};
-  code_map_["Setting_TC[A]"]           = CommandProperty{501, 1};
-  code_map_["Setting_JV[]"]            = CommandProperty{502, 1};
-  code_map_["Setting_PA[]"]            = CommandProperty{503, 1};
-  code_map_["Setting_PR[]"]            = CommandProperty{504, 1};
-  code_map_["Setting_MO"]              = CommandProperty{505, 1};
-  code_map_["Setting_UM"]              = CommandProperty{506, 1};
-  code_map_["Optional_Command"]        = CommandProperty{599, 1};
+  code_map_["ac"]                      = CommandProperty{200, 1};
+  code_map_["acex"]                    = CommandProperty{298, 0};
+  code_map_["BG"]                      = CommandProperty{299, 0};
+  code_map_["rs0:Get_All"]          = CommandProperty{300, 99};
+  code_map_["rs2:Get_GNSS"]         = CommandProperty{302, 99};
+  code_map_["rs1:Get_Elmo"]         = CommandProperty{301, 99};
+  code_map_["Parameter_Set"]    = CommandProperty{400, 0};
+  code_map_["TC_set"]           = CommandProperty{501, 1};
+  code_map_["JV_set"]           = CommandProperty{502, 1};
+  code_map_["PA_set"]           = CommandProperty{503, 1};
+  code_map_["PR_set"]           = CommandProperty{504, 1};
+  code_map_["MO_set"]           = CommandProperty{505, 1};
+  code_map_["UM_set"]           = CommandProperty{506, 1};
+  code_map_["OB_set"]           = CommandProperty{507, 1};
+  code_map_["MC_set"]           = CommandProperty{508, 1};
+  code_map_["en_set"]           = CommandProperty{509, 1};
+  code_map_["az_set"]           = CommandProperty{510, 1};
+  code_map_["hi_set"]           = CommandProperty{511, 1};
+  code_map_["ec:Option"]        = CommandProperty{599, 1};
   code_map_["Reset_gl860"]             = CommandProperty{600, 0};
-  // code_map_["Reset_gl860"]             = CommandProperty{601, 0};
   code_map_["Stat_gl860"]              = CommandProperty{602, 0};
   code_map_["Optional_gl860"]          = CommandProperty{699, 1};
   code_map_["Other"]                   = CommandProperty{900, 0};
@@ -93,7 +101,9 @@ std::vector<uint8_t> CommandBuilder::make_byte_array(const std::string& name, co
     throw CommandException("Invalid argument number");
   }
 // --- 修正箇所：argnum > 0 の場合のみ引数処理を行う ---
-  if (argnum > 0) {
+  if (argnum == 99){
+    //保存の方法考えるよ
+  }else if (argnum > 0) {
     // 必要なサイズを16バイトに定義
     const size_t REQUIRED_SIZE = 16; 
 
@@ -103,12 +113,10 @@ std::vector<uint8_t> CommandBuilder::make_byte_array(const std::string& name, co
     if (arg.size() > REQUIRED_SIZE) {
         throw CommandException("Argument size exceeds 16 bytes");
     }
-
     // --- 文字列をバイト列に変換 ---
     for (char c : arg) {
         command.push_back(static_cast<uint8_t>(c));
     }
-
     // --- ヌル文字 (\0) によるパディング処理 ---
     size_t padding_size = REQUIRED_SIZE - arg.size();
     for (size_t i = 0; i < padding_size; ++i) {

@@ -35,6 +35,7 @@ ANLStatus PushToMongoDB::mod_initialize()
 
 ANLStatus PushToMongoDB::mod_analyze()
 {
+  // std::cout <<"PushToMongo:kokomadekiterukaa~~~"<<interpreter_->CurrentTelemetryType()<<std::endl;
   if (interpreter_->CurrentTelemetryType()==9) {
     pushWholeTelemetry();
   }
@@ -55,6 +56,8 @@ ANLStatus PushToMongoDB::mod_analyze()
   }
   else if (interpreter_->CurrentTelemetryType()==6) {
     pushGL860OptionalTelemetry();
+  }else {
+    return AS_OK;
   }
   return AS_OK;
 }
@@ -66,7 +69,6 @@ void PushToMongoDB::pushWholeTelemetry()
   hsquicklook::DocumentBuilder builder("Telemetry", "Whole");
   builder.setTI(telemdef->TimeNow().tv_sec*64 + telemdef->TimeNow().tv_usec*64*1E-6);
   builder.setTimeNow();
-
   {
     const std::string section_name = "Header";
     auto section = bsoncxx::builder::stream::document{}
@@ -84,6 +86,7 @@ void PushToMongoDB::pushWholeTelemetry()
     auto section = bsoncxx::builder::stream::document{}
       << "Motor_OnOff"         << telemdef->MotorOnOff()
       << "Unit_Mode"            << telemdef->UnitMode()
+      << "Brale_OnOff"            << telemdef->OnOffBrake()
       << "Motor_Fault"          << telemdef->MoterFault()
       << "Error_Code"           << telemdef->ErrorCode()
       << "Position_PX"          << telemdef->Position()
@@ -100,6 +103,9 @@ void PushToMongoDB::pushWholeTelemetry()
       << "Mode_Flag"            << telemdef->modeflag()
       << "Enable_Flag"          << telemdef->enablefrag()
       << "Parameter_Set"        << telemdef->parameterset()
+      << "en"                   << telemdef->en()
+      << "az"                   << telemdef->az()
+      << "hi"                   << telemdef->hi()
       << "last_command"         << telemdef->EUlastcommand()
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
@@ -117,13 +123,13 @@ void PushToMongoDB::pushWholeTelemetry()
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
-  {
-    const std::string section_name = "Strings";
-    auto section = bsoncxx::builder::stream::document{}
-      << "StringsResponse"             << static_cast<std::string>(telemdef->OptionalStrings())
-    << bsoncxx::builder::stream::finalize;
-    builder.addSection(section_name, section);
-  }
+  // {
+  //   const std::string section_name = "Strings";
+  //   auto section = bsoncxx::builder::stream::document{}
+  //     << "StringsResponse"             << static_cast<std::string>(telemdef->OptionalStrings())
+  //   << bsoncxx::builder::stream::finalize;
+  //   builder.addSection(section_name, section);
+  // }
   {
     const std::string section_name = "Software";
     auto section = bsoncxx::builder::stream::document{}
@@ -147,7 +153,6 @@ void PushToMongoDB::pushWholeTelemetry()
       << "Battery_Temperature"      << telemdef->gl860ground()[5]
       << "Gyro_Temperature"         << telemdef->gl860ground()[6]
       << "CMOS_Temperature"         << telemdef->gl860ground()[7]
-
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
@@ -164,6 +169,16 @@ void PushToMongoDB::pushWholeTelemetry()
       << "Pi_HK_Voltage"            << telemdef->gl860ground()[15]
       << "Pivot_Voltage"            << telemdef->gl860ground()[16]
       << "Hub_Voltage"              << telemdef->gl860ground()[17]
+      << bsoncxx::builder::stream::finalize;
+    builder.addSection(section_name, section);
+  }
+  {
+    const std::string section_name = "Logic";
+    auto section = bsoncxx::builder::stream::document{}
+      << "logic1"               << telemdef->gl860logic()[0]
+      << "logic2"               << telemdef->gl860logic()[1]
+      << "logic3"               << telemdef->gl860logic()[2]
+      << "logic4"               << telemdef->gl860logic()[3]
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
@@ -186,16 +201,17 @@ void PushToMongoDB::pushWholeTelemetry()
     auto section = section_stream << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
-
   auto doc = builder.generate();
   mongodbClient_->push("BACS", doc);
-
 }
 
 void PushToMongoDB::pushHKTelemetry()
 {
   TelemetryDefinition* telemdef = interpreter_->Telemdef();
-
+  if (telemdef == nullptr) {
+    std::cout << "DEBUG: telemdef is NULL in pushWholeTelemetry!" << std::endl;
+    return; // NULLならこれ以上進むと落ちるので、関数を抜ける
+  }
   hsquicklook::DocumentBuilder builder("Telemetry", "HK");
   builder.setTI(telemdef->TimeNow().tv_sec*64 + telemdef->TimeNow().tv_usec*64*1E-6);
   builder.setTimeNow();
@@ -256,8 +272,16 @@ void PushToMongoDB::pushHKTelemetry()
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
-  
-  std::cout << "DEBUG: Mongo push SoftwareErrorCode: " <<telemdef->SoftwareErrorCode()<< std::endl;
+  {
+    const std::string section_name = "Logic";
+    auto section = bsoncxx::builder::stream::document{}
+      << "logic1"               << telemdef->gl860logic()[0]
+      << "logic2"               << telemdef->gl860logic()[1]
+      << "logic3"               << telemdef->gl860logic()[2]
+      << "logic4"               << telemdef->gl860logic()[3]
+      << bsoncxx::builder::stream::finalize;
+    builder.addSection(section_name, section);
+  }
   {
     const std::string section_name = "Software_Error";
     auto section_stream = bsoncxx::builder::stream::document{};
@@ -419,9 +443,12 @@ void PushToMongoDB::pushRelayTelemetry()
     builder.addSection(section_name, section);
   }
   {
-    const std::string section_name = "Status";
+    const std::string section_name = "Relay";
     auto section = bsoncxx::builder::stream::document{}
-      
+      << "GPIO_22" << (telemdef->RelaysStatus()[22])
+      << "GPIO_23" << (telemdef->RelaysStatus()[23])
+      << "GPIO_24" << (telemdef->RelaysStatus()[24])
+      // 必要なやつだけ抜き出しで
     << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
@@ -443,7 +470,7 @@ void PushToMongoDB::pushOptionalTelemetry()
 {
   TelemetryDefinition* telemdef = interpreter_->Telemdef();
 
-  hsquicklook::DocumentBuilder builder("Telemetry", "Option");
+  hsquicklook::DocumentBuilder builder("Telemetry", "GPIO");
   builder.setTI(telemdef->TimeNow().tv_sec*64 + telemdef->TimeNow().tv_usec*64*1E-6);
   builder.setTimeNow();
 
@@ -483,7 +510,7 @@ void PushToMongoDB::pushOptionalTelemetry()
 void PushToMongoDB::pushGL860OptionalTelemetry(){
   TelemetryDefinition* telemdef = interpreter_->Telemdef();
 
-  hsquicklook::DocumentBuilder builder("Telemetry", "Option");
+  hsquicklook::DocumentBuilder builder("Telemetry", "GL860");
   builder.setTI(telemdef->TimeNow().tv_sec*64 + telemdef->TimeNow().tv_usec*64*1E-6);
   builder.setTimeNow();
 
@@ -500,10 +527,10 @@ void PushToMongoDB::pushGL860OptionalTelemetry(){
     builder.addSection(section_name, section);
   }
   {
-    const std::string section_name = "Status";
+    const std::string section_name = "Strings";
     auto section = bsoncxx::builder::stream::document{}
-      << "gl860_string ="        << static_cast<std::string>(telemdef->GL860option())
-      << "gl860_lastCommand ="       << static_cast<std::string>(telemdef->lastCommandGL860())
+      << "gl860_string"        << static_cast<std::string>(telemdef->GL860option())
+      << "gl860_lastCommand"   << static_cast<std::string>(telemdef->lastCommandGL860())
     << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }

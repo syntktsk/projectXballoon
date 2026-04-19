@@ -55,6 +55,7 @@ public:
   void writeGL860value(std::vector<int16_t>& getGL860DataVec_);
   void writeGL860status(std::vector<uint8_t>& range_info_);
   void writeEnvironmentalData();
+  void writeEUDataToFile(int id,bool app);
   void writeEss();
   void writeEr();
   void writeCRC16();
@@ -77,9 +78,14 @@ public:
   template<typename T> T getValue(int index);
   template<typename T> void getVector(int index, int num, std::vector<T>& vec);
   const std::vector<uint8_t>& Telemetry() const { return telemetry_; }  
-
+  // --- テレメトリサイズ取得用 Getter ---
+  int hkSize()     const { return hkSize_; }
+  int elmoSize()   const { return elmoSize_; }
+  int GNSSSize()   const { return GNSSSize_; }
+  int optionalSize() const { return optSize_; }
+  int relaysSize() const { return relaysSize_; }
+  int gl860Size() const { return gl860Size_; }
   // rtd
-  // void setGL860value(int index, int16_t v) { getGL860DataVec_[index] = v; }
   void setGL860value(std::vector<int16_t> v){ getGL860DataVec_= v; }
   void setGL860option(std::string v){ gl860string_= v; }
   void setlastCommandGL860(std::string v){ lastCommandGL860_ = v;}
@@ -96,6 +102,7 @@ public:
   int LastCommandCode() const { return lastCommandCode_; }
   int CommandRejectCount() const { return commandRejectCount_; }
   uint64_t SoftwareErrorCode() const { return softwareErrorCode_; }
+  std::vector<uint8_t> RelaysStatus() { return relaysStatus_; }
 
 
 //setterForHK
@@ -134,30 +141,34 @@ public:
 // ForElmo　ここは変わる
   void setElmoData(const ess1& v) {elmo_status = v; }
   void setMotorOnOff(uint8_t v){ MO_ = v; }
+  void setOnOffBrake(uint8_t v){ OB_ = v; }
   void setUnitMode(uint8_t v){ UM_ = v; }
   void setMoterFault(float v){ MF_ = v; }
-  void setErrorCode(int v){ EC_ = v; }
-  void setPosition(int v){ PX_ = v; }
+  void setErrorCode(int32_t v){ EC_ = v; }
+  void setPosition(int32_t v){ PX_ = v; }
   void setVelocity(float v){ VX_ = v; }
   void setI_Qaxis(float v){ IQ_ = v; }
   void setI_Daxis(float v){ ID_ = v; }
   void setMaxCurrent(float v){ MC_ = v; }
-  void setBusVoltage(int v){ BV_ = v; }
+  void setBusVoltage(int32_t v){ BV_ = v; }
   void setTemperatureInfomation(int8_t v){ TI_ = v; }
   void setTorqueCommand(float v){ TC_ = v; }
   void setJogVelocity(float v){ JV_ = v; }
-  void setPositionAbusolute(int v){ PA_ = v; }
-  void setPositionRelative(int v){ PR_ = v; }
+  void setPositionAbusolute(int32_t v){ PA_ = v; }
+  void setPositionRelative(int32_t v){ PR_ = v; }
   void setModeflag(uint8_t v){ ac_ = v; }
   void setEnablefrag(u_int8_t v){ ef_ = v; }
   void setParameterset(uint8_t v){ ps_ = v; }
-  void setEUlastcommand(std::string v){ elc_ = v;}
+  void setEn(int32_t v){ en_ = v; }
+  void setAz(float v){ az_ = v; }
+  void setHi(int32_t v){ hi_ = v; }
+  void setEUlastcommand(std::string v){ lc_ = v;}
 
 // ninni no mojiretu
   void setOptionalStrings(std::string v){er_ = v;}
 
 //Relay
-  void setRelay_dummy(int v){dummy_data = v;}
+  void setRelay(uint32_t v){relay_ = v;}
 
 // getter
   uint32_t StartCode() { return startCode_; }
@@ -174,6 +185,7 @@ public:
   std::string GL860option(){ return gl860string_; }
   std::vector<float>& gl860ground() {return gl860_ground_; }
   std::string lastCommandGL860(){return lastCommandGL860_;}
+  std::vector<std::string> gl860logic(){ return gl860_logic_;}
   // --- 温度系 ---
   uint16_t PivotTemp(){ return PivotTemp_; }
   uint16_t StarCameraTemp() { return StarCameraTemp_; }
@@ -196,8 +208,9 @@ public:
   uint16_t HubVolt()        { return HubVolt_; }
 
 // getter of Elmo
-  int MotorOnOff(){ return MO_; }
-  int UnitMode(){ return UM_; }
+  uint8_t MotorOnOff(){ return MO_; }
+  uint8_t UnitMode(){ return UM_; }
+  uint8_t OnOffBrake(){ return OB_; }
   float MoterFault(){ return MF_;}
   int ErrorCode(){ return EC_; }
   int Position(){ return PX_; }
@@ -206,15 +219,18 @@ public:
   float I_Daxis(){ return ID_; }
   float MaxCurrent(){ return MC_; }
   int BusVoltage(){ return BV_; }
-  int TemperatureInfomation(){ return TI_; }
+  int8_t TemperatureInfomation(){ return TI_; }
   float TorqueCommand(){ return TC_; }
   float JogVelocity(){ return JV_; }
   int PositionAbusolute(){ return PA_; }
   int PositionRelative(){ return PR_; }
-  int modeflag(){ return ac_; }
-  int enablefrag(){ return ef_; }
-  int parameterset(){ return ps_; }
-  std::string EUlastcommand(){return elc_;}
+  uint8_t modeflag(){ return ac_; }
+  uint8_t enablefrag(){ return ef_; }
+  uint8_t parameterset(){ return ps_; }
+  int32_t en(){ return en_; }
+  float az(){ return az_; }
+  int32_t hi(){ return hi_; }
+  std::string EUlastcommand(){return lc_;}
 
 // getter of GNSS
   float latitude(){ return la_; }
@@ -229,10 +245,17 @@ public:
   std::string OptionalStrings(){return er_;}
 
 //Relay
-  int Relay_dummy(){return dummy_data;}
+  uint32_t Relay(){return relay_;}
 
 private:
   std::vector<uint8_t> telemetry_;
+  const int hkSize_ = 40+4;
+  const int elmoSize_ = 83;
+  const int GNSSSize_ = 28;
+  const int optSize_ = 16;
+  const int relaysSize_ = 4;
+  const int gl860Size_ = 32*2;
+  const float mul = 10000;
   // header
   uint32_t startCode_ = 0xEB905B6A;
   uint16_t telemetryType_ = 0;
@@ -243,46 +266,49 @@ private:
   uint16_t crc_ = 0;
   uint32_t stopCode_ = 0xC5A4D279;
 
-  int lastCommandIndex_; 
-  int lastCommandCode_; 
-  int commandRejectCount_; 
+  uint32_t lastCommandIndex_; 
+  uint16_t lastCommandCode_; 
+  uint16_t commandRejectCount_; 
   uint64_t softwareErrorCode_;
-
+  std::vector<uint8_t> relaysStatus_ = std::vector<uint8_t>(32, 0);
+  
   uint64_t SDCapacity_ = 0;
 
   // HK
-  std::vector<int16_t> getGL860DataVec_;
-  std::string gl860string_;
+  std::vector<int16_t> getGL860DataVec_ = std::vector<int16_t>(22, 999);
+  std::string gl860string_ = "";
   std::vector<float> gl860_ground_;
-  std::string lastCommandGL860_;
+  std::vector<std::string> gl860_logic_ = {"0", "0", "0", "0"};
+  std::string lastCommandGL860_ = "";
   std::vector<int> range_info_ = {
     4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000,
   };
   // --- 温度系 ---
-  uint16_t PivotTemp_;
-  uint16_t StarCameraTemp_;
-  uint16_t MirrorTemp_;
-  uint16_t GnssTemp_hk_;
-  uint16_t CulculatorTemp_;
-  uint16_t BatteryTemp_;
-  uint16_t GyroTemp_;
-  uint16_t CmosTemp_;
+  uint16_t PivotTemp_ = 0;
+  uint16_t StarCameraTemp_= 0;
+  uint16_t MirrorTemp_= 0;
+  uint16_t GnssTemp_hk_= 0;
+  uint16_t CulculatorTemp_= 0;
+  uint16_t BatteryTemp_= 0;
+  uint16_t GyroTemp_= 0;
+  uint16_t CmosTemp_= 0;
   // --- 電圧系 ---
-  uint16_t PcVolt_;
-  uint16_t StarCameravolt_;
-  uint16_t GnssVolt_;
-  uint16_t GyroVolt_;
-  uint16_t CmosVolt_;
-  uint16_t RouterVolt_;
-  uint16_t HeaterVolt_;
-  uint16_t Pi_hkVolt_;
-  uint16_t PivotVolt_;
-  uint16_t HubVolt_;
+  uint16_t PcVolt_= 0;
+  uint16_t StarCameravolt_= 0;
+  uint16_t GnssVolt_= 0;
+  uint16_t GyroVolt_= 0;
+  uint16_t CmosVolt_= 0;
+  uint16_t RouterVolt_= 0;
+  uint16_t HeaterVolt_= 0;
+  uint16_t Pi_hkVolt_= 0;
+  uint16_t PivotVolt_= 0;
+  uint16_t HubVolt_= 0;
 
   // Elmo
   ess1 elmo_status;
   uint8_t MO_ = 0;   // Motor On/OFF 状態 (1=モーター有効, 0=無効)
   uint8_t UM_ = 0;   // Unit Mode = 0,1,2,5
+  uint8_t OB_ = 0;
   float MF_ = 0;   // Motor Fault 異常停止要因（モーターが無効化された理由）
   int EC_ = 0;   // Error Code エラーコード
   int PX_ = 0;   // Position 現在位置 [cnt]
@@ -299,7 +325,10 @@ private:
   uint8_t ac_ = 0;   // mode flag 運転モード番号 (0~21)
   uint8_t ef_ = 0;   // enable flag 回転可能かどうか (0=回転不可, 1=回転可能)
   uint8_t ps_ = 0;  
-  std::string elc_= 0;
+  uint32_t  en_ = 0;
+  float az_ = 0;
+  uint32_t hi_ = 0;
+  std::string lc_= "";
 
   ess2 gnss_status;
   float la_ = 0;
@@ -311,10 +340,10 @@ private:
   float te_ = 0;  // temperature 気温 / センサ温度 [°C]
 
 // optional
-  int header_size;
-  std::string er_;
+  int header_size = 0;
+  std::string er_ = "THIS_IS_TEST";
 //Relay
-  int dummy_data = 0;
+  uint32_t relay_ = 0;
 
   int numZeroFill_ = 0;
   
@@ -330,8 +359,6 @@ void TelemetryDefinition::addValue(T input)
   uint64_t v = 0;
 
   std::memcpy(&v, &input, size);
-
-  // 2. ビッグエンディアンとして push_back
   for (int i=0; i<size; i++) {
     const int shift = 8 * (size-1-i);
     telemetry_.push_back(static_cast<uint8_t>((v >> shift) & 0xff));

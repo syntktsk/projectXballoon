@@ -1,0 +1,21 @@
+digraph "GPIO line operations"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=box];
+  rankdir=LR;
+  Node6 [label="Setting line configuration",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$group__line__config.html",tooltip="Functions allowing modification of config options of GPIO lines requested from user-space."];
+  Node4 [label="Line requests",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$group__line__request.html",tooltip="Interface for requesting GPIO lines from userspace for both values and events."];
+  Node5 [label="Reading & setting line\l values",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$group__line__value.html",tooltip="Functions allowing to read and set GPIO line values for single lines and in bulk."];
+  Node1 [label="GPIO line operations",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black",tooltip="Functions and data structures dealing with GPIO lines."];
+  Node8 [label="Misc line functions",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$group__line__misc.html",tooltip="Functions that didn't fit anywhere else."];
+  Node2 [label="Operating on multiple\l lines",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$group__line__bulk.html",tooltip="Convenience data structures and helper functions for storing and operating on multiple lines at once."];
+  Node7 [label="Line events handling",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$group__line__event.html",tooltip="Structures and functions allowing to poll lines for events and read them, both for individual lines a..."];
+  Node3 [label="Line info",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$group__line__info.html",tooltip="Definitions and functions for retrieving kernel information about both requested and free lines."];
+  Node1->Node2 [shape=plaintext, dir="back", style="solid"];
+  Node1->Node3 [shape=plaintext, dir="back", style="solid"];
+  Node1->Node4 [shape=plaintext, dir="back", style="solid"];
+  Node1->Node5 [shape=plaintext, dir="back", style="solid"];
+  Node1->Node6 [shape=plaintext, dir="back", style="solid"];
+  Node1->Node7 [shape=plaintext, dir="back", style="solid"];
+  Node1->Node8 [shape=plaintext, dir="back", style="solid"];
+}

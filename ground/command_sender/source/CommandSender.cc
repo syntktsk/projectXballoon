@@ -16,7 +16,7 @@
 
 #ifdef __APPLE__
 #define TCSETS TIOCSETA
-#define SERIAL_PORT "/dev/tty.usbserial-1130"
+#define SERIAL_PORT "/dev/tty.usbserial-BG03Q92"
 #else
 #define SERIAL_PORT "/dev/ttyAMA0"
 #endif
@@ -27,10 +27,10 @@ static const long RECEIVE_TIMEOUT_MS = 500;
 
 CommandSender::CommandSender()
 :sock_fd_(-1){
-  CommunicationType_ = 2;//1->Serial 2->Socket
+  CommunicationType_ = 1;//1->Serial 2->Socket
   serial_port_ = SERIAL_PORT;
   
-  ServerIp_ ="192.168.10.138";
+  ServerIp_ ="192.168.10.101";//ou
   port_ = 9090 ;
 }
 
@@ -61,7 +61,9 @@ bool CommandSender::open_serial_port()
   fcntl(fd, F_SETFL, O_RDWR); // reference: https://github.com/orbcode/orbuculum/issues/15
 
   fd_ = fd;
-
+// 追加：ここを Python の timeout 設定と同じ「ブロッキングモード」にする
+  int flags = fcntl(fd_, F_GETFL, 0);
+  fcntl(fd_, F_SETFL, flags & ~O_NONBLOCK); 
   return true;
 }
 
@@ -73,6 +75,10 @@ void CommandSender::close_serial_port()
 int CommandSender::send(const std::vector<uint8_t>& byte_array)
 {
   const int rval = write(fd_, &byte_array[0], byte_array.size());
+  tcdrain(fd_);/*78-80行追記したよ*/
+  tcflush(fd_, TCOFLUSH);
+  fsync(fd_);
+  usleep(500000);
   return rval;
 }
 
@@ -103,7 +109,6 @@ bool CommandSender::open_socket() {
     }
 
     // 3. connect() を使ってソケットの宛先を固定
-    //    これにより、sendto() の代わりに send() が使えるようになる。
     if (connect(sock_fd_, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         std::cerr << "CommandSender:Failed to connect (fixed destination): " << strerror(errno) << std::endl;
         close(sock_fd_);

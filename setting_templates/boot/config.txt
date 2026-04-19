@@ -88,5 +88,6 @@ dtoverlay=disable-bt
 dtoverlay=uart5
 dtoverlay=uart2
 [all]
-dtoverlay=gpio-fan,gpiopin=12,temp=60000
+dtoverlay=gpio-fan,gpiopin=17,temp=60000
 dtoverlay=gpio-shutdown,debounce=1000,gpio_pin=18
+gpio=22,23,24,27=op,dl

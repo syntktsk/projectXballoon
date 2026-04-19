@@ -43,6 +43,11 @@ ANLStatus ReceiveTelemetry::mod_initialize()
   if (communicationType_ == "serial"){
     sc_ = std::make_unique<SerialCommunication>(serialPath_, baudrate_, openMode_);
     sc_->initialize();
+    // ★ これを sc_->initialize() の直後に入れて再ビルド！
+    std::cout << "Force setting Mac serial port..." << std::endl;
+    std::string cmd = "stty -f " + serialPath_ + " 57600 raw -echo";
+    system(cmd.c_str());
+    /*ここまで追加*/
   }else if(communicationType_ == "socket"){
     ou_ = std::make_unique<SocketTransceiver>(OU_serverIp_, OU_port_);
     ou_ ->initialize(true);
@@ -79,7 +84,7 @@ ANLStatus ReceiveTelemetry::mod_analyze()
       valid_ = false;
       return AS_OK;
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     byte_read = sc_->sread(buffer_, maxTelemetry_);
     if (byte_read == -1) {
       std::cerr << "Read command failed in ReceiveTelemetry::mod_analyze: byte_read = " << byte_read << std::endl;
@@ -137,8 +142,10 @@ ANLStatus ReceiveTelemetry::mod_analyze()
     }
     telemetry_.push_back(received_data[i]);
   }
-
   if (chatter_>=1) {
+    std::cout << "byte_read: " << byte_read << std::endl;
+  }
+  if (chatter_>=10) {
     std::cout << "byte_read: " << byte_read << std::endl;
     for (int i = 0; i < static_cast<int>(telemetry_.size());i++) {
       std::cout << "telemetry[" << i << "] = "<<static_cast<int>(telemetry_[i]) << std::endl;

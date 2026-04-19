@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 require 'anlnext'
-$LOAD_PATH.push('/home/syn/balloon/onboard/build/rubyext')
+$LOAD_PATH.push('/home/bacs/balloon/onboard/build/rubyext')
 require 'Balloon'
 
 class MyApp < ANL::ANLApp
@@ -12,23 +12,23 @@ class MyApp < ANL::ANLApp
         timeout_sec: 1, 
         save_command: true,
         num_command_per_file: 1000,
-        chatter: 1,
-        EU_socket_serverIp: "192.168.10.136", #Eu
+        chatter: 10,
+        EU_socket_serverIp: "192.168.10.96", #Eu
         EU_socket_port: 9998,
-        communication_type: "socket", # "serial" or "socket"
-        serial_path: "/tmp/ttyAMA0_CMD_V",
+        communication_type: "serial", # "serial" or "socket"
+        serial_path: "/dev/ttyAMA5",
         baudrate: 1200.to_i,
-        OU_socket_serverIp: "192.168.1.138", #Ou
+        OU_socket_serverIp: "192.168.10.101", #Ou
         OU_socket_port: 9090,
-        binary_filename_base: "/home/syn/data/command/command"
+        binary_filename_base: "/home/bacs/data/command/command"
         ) do |m|
           m.set_singleton(1)
       end
 
-      chain Balloon::SPIManager
-      with_parameters(spi_flags: (1<<5) + (1<<6) + (1<<7) + 3, baudrate: 1000000) do |m|
-        m.set_singleton(0)
-      end
+      # chain Balloon::SPIManager
+      # with_parameters(spi_flags: (1<<5) + (1<<6) + (1<<7) + 3, baudrate: 1000000) do |m|
+      #   m.set_singleton(0)
+      # end
 
       chain Balloon::GetRaspiStatus do |m|
           m.set_singleton(0)
@@ -37,7 +37,7 @@ class MyApp < ANL::ANLApp
 
       chain Balloon::GetGL860Data
       with_parameters(
-        path: "/home/syn/data/telemetry/ras3", 
+        path: "/home/bacs/data/telemetry/ras3", 
         chatter: 0,
         gl860_ip:"192.168.1.100",
         gl860_port:8023,
@@ -47,22 +47,28 @@ class MyApp < ANL::ANLApp
       end
 
       chain Balloon::ReceiveEUResponse do |m|
-      with_parameters(filepath:"/home/syn/data/telemetry/ras2")
+      with_parameters(filepath:"/home/bacs/data/telemetry/ras2")
           m.set_singleton(0)
           with_parameters(chatter: 1)
+      end
+      
+      chain Balloon::RelayControl do |m|
+      with_parameters(gpio_list:[23, 24])
+        m.set_singleton(0)
       end
 
       chain Balloon::SendTelemetry
       with_parameters(
-        EU_socket_serverIp:"192.168.10.136",#Eu
+        EU_socket_serverIp:"192.168.10.96",#Eu
         EU_socket_port: 9998,
-        communication_type: "socket", #地上との通信手段 "serial" or "socket"
-        serial_path: "/tmp/ttyAMA0_V",
-        baudrate: 1200.to_i,
-        OU_socket_serverIp:"192.168.10.136", #mac
+        communication_type: "serial", #地上との通信手段 "serial" or "socket"
+        serial_path: "/dev/ttyAMA2",
+        baudrate: 57600,
+        OU_socket_serverIp:"192.168.96", #mac
         OU_socket_port: 7070,
         GL860_Data_names: ["GetGL860Data"],
-        binary_filename_base: "/home/syn/data/telemetry/telemetry",
+        binary_filename_base: "/home/bacs/data/telemetry/telemetry",
+        save_path:"/home/bacs/data/telemetry/ess/",
         chatter: 0
       ) do |m|
           m.set_singleton(0)

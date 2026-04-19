@@ -22,8 +22,8 @@ using namespace balloon;
 // 関数宣言
 void print_command(const std::vector<std::vector<std::string>>& commands, int run_index);
 std::vector<std::vector<std::string>> read_command_plan(const std::string &filename);
-void run_command_sequence(const std::vector<std::vector<std::string>> &commands);
-void send_command(const std::vector<std::vector<std::string>> &commands, int run_index);
+void run_command_sequence(const std::vector<std::vector<std::string>> &commands, balloon::CommandSender &sender);
+void send_command(const std::vector<std::vector<std::string>> &commands, int run_index, balloon::CommandSender &sender);
 
 const int DISPLAY_NUMBER_PREVIOUS = 10; // 実行の行より前
 const int DISPLAY_NUMBER_ADVANCE = 30;  // 実行の行より後
@@ -31,21 +31,31 @@ const int DISPLAY_SIZE = 30;
 
 int main(int argc, char **argv)
 {
+  CommandSender sender; 
+
+  std::cout << "--- BACS Serial Communication Test (1200bps) ---" << std::endl;
+  // 2. シリアルポートの初期化
+  sender.set_serial_port("/dev/cu.usbserial-BG03Q92N"); // cuデバイスを推奨
+  if (!sender.open_serial_port()) {
+      std::cerr << "Failed to open serial port." << std::endl;
+      return 1;
+  }
+  // ポートが安定するまで待機
+  std::cout << "Port opened. Waiting for stability..." << std::endl;
+  usleep(1000000); // 1秒
+
   // 実行時引数の数をチェック
   if (argc != 2) {
     std::cout << "Usage: CommandPlanRunner <command-plan>" << std::endl;
     return 1; 
   }
-  // コマンドライン引数 [1] をファイル名として取得[0]は本体
   const std::string filename(argv[1]); 
   
-  // コマンドプランファイルを読み込み、コマンドリスト（commands）を生成
   const std::vector<std::vector<std::string>> commands = read_command_plan(filename);
-  
-  // コマンドの実行シーケンスを開始
-  run_command_sequence(commands);
 
-  return 0; // 正常終了
+  run_command_sequence(commands, sender);
+
+  return 0;
 }
 
 // --- 現在のコマンドとその前後を表示する関数 ---
@@ -157,7 +167,7 @@ std::vector<std::vector<std::string>> read_command_plan(const std::string &filen
 }
 
 // --- コマンド実行の制御ループ ---
-void run_command_sequence(const std::vector<std::vector<std::string>>& commands)
+void run_command_sequence(const std::vector<std::vector<std::string>>& commands,CommandSender &sender)
 {
   anlnext::ReadLine reader; // ターミナルからユーザー入力を受け付けるためのオブジェクト
   int run_index = 0; // 現在実行対象となっているコマンドの行番号 (インデックス)
@@ -197,12 +207,13 @@ void run_command_sequence(const std::vector<std::vector<std::string>>& commands)
     
     if (line == "send") {
       // 'send' が入力された場合、現在のコマンドを実行
-      send_command(commands, run_index);
+      send_command(commands, run_index, sender);
       // run_index++; // 実行後、次の行に進む
       continue;
     }
     else if (line == "exit") {
       // 'exit' が入力された場合、プログラムを終了
+      sender.close_serial_port();
       std::cout << "Exiting the command sender." << std::endl;
       break;
     }
@@ -270,7 +281,7 @@ void run_command_sequence(const std::vector<std::vector<std::string>>& commands)
 }
 
 // --- コマンドをシリアルポートに送信する関数 ---
-void send_command(const std::vector<std::vector<std::string>> &commands, int run_index)
+void send_command(const std::vector<std::vector<std::string>> &commands, int run_index,CommandSender &sender)
 {
   CommandBuilder builder; // バイト配列構築用のヘルパークラス
   std::vector<std::string> args; // 引数を格納する配列
@@ -329,40 +340,24 @@ void send_command(const std::vector<std::vector<std::string>> &commands, int run
       // (切り詰めるかどうかの判断は、後続の builder.make_byte_array に委ねる)
   }
   
-  // コマンド名と引数から、送信用のバイナリバイト配列を生成
   std::vector<uint8_t> command_bits = builder.make_byte_array(commands[run_index][0], args);
   
-  CommandSender sender; // 送信処理を実行するクラス
   if (sender.CommunicationType() == 1){
-    // シリアルポートパスを設定 (Mac環境の例)
-    sender.set_serial_port("/tmp/ttyCMD.serial");
-    // sender.set_serial_port("/dev/ttyAMA0"); // ラズパイ環境などの例（コメントアウト）
     
-    // シリアルポートを開く
-    if (!sender.open_serial_port()) {
-      std::cout << "Serial port open error -> Skip" << std::endl;
-      return; // 開けなかった場合は送信をスキップ
-    }
-    
-    // バイト配列をシリアルポートに送信
     int rval = sender.send(command_bits);
     
-    // 送信バイト数が、生成したバイト配列のサイズと一致するか確認
     if (rval != static_cast<int>(command_bits.size())) {
       std::cout << "Send Error" << std::endl;
     }
     else {
       std::cout << "Command " << commands[run_index][0] << " sent." << std::endl;
-      // 送信されたコマンドをファイルなどに記録 (write_command は外部で定義)
       write_command(command_bits, commands[run_index][0]); 
     }
-    // シリアルポートを閉じる
-    sender.close_serial_port();
   }else if(sender.CommunicationType() == 2){
     
     if (!sender.open_socket()) {
     std::cout << "Socket open error -> Skip" << std::endl;
-    return; // 開けなかった場合は送信をスキップ
+    return;
     }
 
     int rval = sender.sendBySocket(command_bits);
@@ -372,7 +367,6 @@ void send_command(const std::vector<std::vector<std::string>> &commands, int run
     }
     else {
       std::cout << "Command " << commands[run_index][0] << " sent." << std::endl;
-      // 送信されたコマンドをファイルなどに記録 (write_command は外部で定義)
       write_command(command_bits, commands[run_index][0]); 
     }
     // シリアルポートを閉じる

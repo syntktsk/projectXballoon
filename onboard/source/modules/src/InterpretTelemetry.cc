@@ -51,8 +51,10 @@ ANLStatus InterpretTelemetry::mod_analyze()
   if (!(receiver_->Valid())) {
     return AS_OK;
   }
-  
-  currentTelemetryType_ = 9;
+  if (chatter_ >= 1) {
+    std::cout << "✨ [InterpretTelemetry] New packet arrived! (ID: " << (int)currentRunID_ << ")" << std::endl;
+  }
+  // currentTelemetryType_ = 9;
   const std::vector<uint8_t>& telemetry = receiver_->Telemetry();
 
   bool status = telemdef_->setTelemetry(telemetry);
@@ -74,19 +76,9 @@ ANLStatus InterpretTelemetry::mod_analyze()
   if (saveTelemetry_) {
     writeTelemetryToFile(failed);
   }
-
-  // if (telemdef_->WFDownloadDone()) {
-  //   std::vector<std::string> image_filenames;
-  //   if (plotter_!=nullptr) {
-  //     plotter_->makeImage(image_filenames);
-  //     if (pusher_!=nullptr) {
-  //       std::vector<std::string> keys = {"waveform_all", "waveform_all_autorange", "waveform_pmt"};
-  //       pusher_->pushWaveformImage(keys, image_filenames);
-  //     }
-  //   }
-  //   telemdef_->setWFDownloadDone(false);
-  // }
-  
+  if (chatter_ >= 1) {
+    std::cout << "Successfully interpreted: " << currentTelemetryType_ << std::endl;
+  }
   return AS_OK;
 }
 
@@ -103,6 +95,7 @@ void InterpretTelemetry::writeTelemetryToFile(bool failed)
   if (type==3) type_str = "Elmo";
   if (type==4) type_str = "Relays";
   if (type==5) type_str = "Option";
+  if (type==6) type_str = "GL860";
   if (type==9) type_str = "Whole";
   if (type==0) type_str = "failed";
   if (failed) {

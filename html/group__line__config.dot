@@ -1,0 +1,9 @@
+digraph "Setting line configuration"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=box];
+  rankdir=LR;
+  Node1 [label="Setting line configuration",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black",tooltip="Functions allowing modification of config options of GPIO lines requested from user-space."];
+  Node2 [label="GPIO line operations",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$group__lines.html",tooltip="Functions and data structures dealing with GPIO lines."];
+  Node2->Node1 [shape=plaintext, dir="back", style="solid"];
+}

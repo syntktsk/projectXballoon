@@ -35,17 +35,6 @@ bool CommandDefinition::setCommand(const std::vector<uint8_t>& v)
   command_ = v;
   uint16_t argc = getValue<uint16_t>(4);
 
-  // 長さチェックの修正：
-  // 従来の計算式 (10 + 4*argc) または、現在の地上局仕様の 26バイト であれば許可する
-  // int expected_len = 10 + 4 * static_cast<int>(argc);
-  // if (n != expected_len && n != 26) {
-  //   std::cerr << "Invalid command: length not appropriate" << std::endl;
-  //   std::cerr << "The length of command should be " << expected_len <<
-  //     " or 26, but now it is " << n << std::endl;
-  //   return false;
-  // }
-
-  // CRC16のチェック
   std::vector<uint8_t> com_without_footer;
   for (int i = 0; i < n - 4; i++) {
     com_without_footer.push_back(v[i]);
@@ -68,7 +57,6 @@ void CommandDefinition::interpret()
   argc_ = getValue<uint16_t>(4);
 
   arguments_.clear();
-  // getVector<int32_t>(6, static_cast<int>(argc_), arguments_);
   const size_t HEADER_SIZE = 6;
   const size_t DATA_LENGTH = 16;
 

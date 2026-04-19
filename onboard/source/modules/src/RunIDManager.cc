@@ -33,7 +33,7 @@ ANLStatus RunIDManager::mod_initialize()
   }
   runID_ = id + 1;
   ifs.close();
-
+  std::cout << "runIDmanager is alive ->" << runID_ <<std::endl;
   std::ofstream ofs(filename_, std::ios::app);
   ofs << runID_ << " " << timeStampStr_ << "\n";
   ofs.flush();

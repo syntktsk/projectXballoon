@@ -83,6 +83,8 @@ var HSQuickLook = HSQuickLook || {};
     $("#display-title-button").click(toggleTitleDisplay);
     $("#draggable-button").click(toggleDraggable);
     $("#clear-log-button").click(clearLog);
+
+    $("#save-all-button").click(saveAllDataAsText);
   }
 
   function initialize(userConfig) {
@@ -483,7 +485,7 @@ var HSQuickLook = HSQuickLook || {};
         documentLabel = collection + '/' + directory + '/' + document;
     return documentLabel;
   }
-
+/*
   function createTableHTML(tableInfo) {
     var tableID = getTableID(tableInfo),
         table, thead, theadRow, theadTitle, tbody;
@@ -510,7 +512,60 @@ var HSQuickLook = HSQuickLook || {};
 
     return table;
   }
+*/
+  function createTableHTML(tableInfo) {
+    var tableID = getTableID(tableInfo),
+        table, thead, theadRow, theadTitle, tbody, saveBtn;
 
+    table = $("<table />").attr({ "frame": "border", "rules": "all", "id": "table-" + tableID }).addClass("data-table");
+
+    thead = $("<thead />");
+    theadRow = $("<tr />");
+    
+    theadTitle = $("<th />").html(getTableTitle(tableInfo)).attr("id", "table-" + tableID + "-title");
+    
+    saveBtn = $("<input type='button' value='Save' />") // ボタン要素を作る
+              .css({
+                  "float": "right",      // 右端に寄せる
+                  "font-size": "10px",   // 文字を小さくする
+                  "margin": "2px",       // 周りに少し隙間を作る
+                  "cursor": "pointer"    // マウスを乗せた時に指マークにする
+              })
+              .click(function(e) {
+                  e.stopPropagation(); 
+                  saveSingleTable(tableID, getTableTitle(tableInfo));
+              });
+
+    theadTitle.append(saveBtn); // タイトルの文字の横にボタンを合体させる
+    theadRow.append(theadTitle);
+    thead.append(theadRow);
+
+    tbody = $("<tbody/>").attr("id", "table-" + tableID + "-body");
+    table.append(thead).append(tbody);
+    return table;
+  }
+  /* 特定のテーブル1つだけを保存する関数（ログ表示付き）*/
+  function saveSingleTable(tableID, title) {
+  var textData = "Table Name: " + title + "\n";
+  var timeStr = $('p#time').text(); // 画面上部の時刻（TIなど）を取得
+  textData += "Data Time: " + timeStr + "\n";
+  textData += "------------------------------\n";
+
+  $("#table-" + tableID + "-body tr").each(function() {
+    var key = $(this).find("td:first-child").text();
+    var value = $(this).find("td:nth-child(2)").text();
+    if (value.trim() !== "") {
+      textData += key + " : " + value + "\n";
+    }
+  });
+  downloadText("Table_" + title.replace(/\s+/g, '_'), textData);
+
+  // --- ここからログ表示の追加 ---
+  var now = new Date();
+  var clockTime = now.getHours() + ":" + ("0" + now.getMinutes()).slice(-2) + ":" + ("0" + now.getSeconds()).slice(-2);
+  log("<span style='color: #00ff00;'>[ " + clockTime + " ]</span> Saved Table: <b>" + title + "</b> (" + timeStr + ")");
+  }
+  /*ここまで追加分*/
   function initializeTable(tableInfo) {
     var tableID = getTableID(tableInfo),
         contents = tableInfo.contents,
@@ -847,12 +902,31 @@ var HSQuickLook = HSQuickLook || {};
     return value;
   }
 
+  // function formatValue(info, value) {
+  //   var format = info.format,
+  //       valueFormated = (format === void 0) ? value : sprintf(format, value);
+  //   return valueFormated;
+  // } 220227に高塚が加えた変更
   function formatValue(info, value) {
-    var format = info.format,
-        valueFormated = (format === void 0) ? value : sprintf(format, value);
-    return valueFormated;
-  }
+    var format = info.format;
 
+    // 既にformat指定があるならそれを優先
+    if (format !== void 0) {
+      return sprintf(format, value);  
+    }
+
+    // --- ここから強制固定 ---
+
+    if (info.type === "float") {
+      return Number(value).toFixed(4);   // 小数点以下4桁固定
+    }
+
+    if (info.type === "int" || info.type === "uint") {
+      return String(value).padStart(6, " "); // 桁数固定（6桁分）
+    }
+
+    return value;
+  }
   /***************************************************************************
    * Trend curve plots
    */
@@ -873,5 +947,56 @@ var HSQuickLook = HSQuickLook || {};
     delete graphs;
     graphs = new Object();
   }
+  /*追加してるよここ以降 */
+  function saveAllDataAsText() {
+    var textData = "=== HS Quick Look ALL DATA EXPORT ===\n";
+    var timeStr = $('p#time').text(); 
+    textData += "Data Time: " + timeStr + "\n";
+    textData += "Export CPU Time: " + new Date().toLocaleString() + "\n";
+    textData += "------------------------------------------\n\n";
 
+    // 画面上のすべての .data-table を順番に処理する
+    $(".data-table").each(function() {
+        var tableTitle = $(this).find("thead th").contents().filter(function() {
+            return this.nodeType === 3; 
+        }).text().trim();
+
+        textData += "[ " + tableTitle + " ]\n";
+
+        $(this).find("tbody tr").each(function() {
+            var key = $(this).find("td:first-child").text();
+            var value = $(this).find("td:nth-child(2)").text();
+            if (value.trim() !== "") {
+                textData += key + " : " + value + "\n";
+            }
+        });
+        textData += "\n";
+    });
+
+    downloadText("All_Tables", textData);
+
+    log("<span style='color: #ffff00;'>[ALL SAVE]</span> Exported all tables to one file.");
+  }
+
+  function downloadText(fileNamePrefix, content) {
+  // テキストをファイル形式（Blob）にする
+  var blob = new Blob([content], { type: "text/plain" });
+  var a = document.createElement("a");
+  
+  // ファイル名に付ける時間を作る
+  var t = new Date();
+  var ts = t.getFullYear() 
+           + ("0"+(t.getMonth()+1)).slice(-2) 
+           + ("0"+t.getDate()).slice(-2) + "_" 
+           + ("0"+t.getHours()).slice(-2) 
+           + ("0"+t.getMinutes()).slice(-2);
+  
+  // ブラウザに「ダウンロードして！」と命令する
+  a.href = URL.createObjectURL(blob);
+  a.download = fileNamePrefix + "_" + ts + ".txt";
+  a.click();
+  
+  // 後片付け
+  URL.revokeObjectURL(a.href);
+  }
 })(); /* end of the anonymous function */

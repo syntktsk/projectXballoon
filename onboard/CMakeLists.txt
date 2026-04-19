@@ -83,9 +83,9 @@ link_directories(
 )
 
 file(GLOB ANL_MODULES 
-    "source/core/src/*.cc"
-    "source/modules/src/*.cc"
-    "source/gl860/*.cc"
+  "source/core/src/*.cc"
+  "source/modules/src/*.cc"
+  "source/gl860/*.cc"
 )
 
 # これで ANL_MODULES に TelemetryDefinition.cc などが入るはずです

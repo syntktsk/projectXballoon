@@ -1,3 +1,41 @@
-td#grams-Telemetry-HK-Command_Name-Last_Command {
+/* td#grams-Telemetry-HK-Command_Name-Last_Command {
     width: 25em;
+} */
+/* .data-table {
+    table-layout: fixed;
+    width: 100%;   
+}
+.data-table td {
+    font-family: monospace; 
+    min-width: 8em;         
+    white-space: nowrap;     
+}
+
+.data-table td {
+    overflow: hidden;
+} */
+/* ===== テーブル全体 ===== */
+.data-table {
+    table-layout: fixed;
+    width: 350px;        /* ← 固定幅（まず適当でOK） */
+}
+
+/* ===== 各セル ===== */
+.data-table td {
+    font-family: monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ===== key列 ===== */
+.data-table td:first-child {
+    width: 200px;
+}
+
+/* ===== value列 ===== */
+.data-table td:last-child {
+    width: 150px;
+    text-align: right;
+    padding-right: 5px;
 }

@@ -2,6 +2,8 @@
 #include <iostream>
 #include <cstring>
 #include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 namespace balloon {
 
@@ -11,36 +13,102 @@ GL860main::~GL860main() {
     finalize();
 }
 
+// bool GL860main::initialize(const std::string& ip, int port) {
+//     sock_ = socket(AF_INET, SOCK_STREAM, 0);
+//     if (sock_ < 0) {
+//         std::cerr << "GL860: Failed to create socket. errno=" << errno << std::endl;
+//         return false;
+//     }
+//     int opt = 1;
+//     setsockopt(sock_, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
+//     struct timeval tv;
+//     tv.tv_sec = 2;
+//     tv.tv_usec = 0;
+//     setsockopt(sock_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+//     struct sockaddr_in addr;
+//     memset(&addr, 0, sizeof(addr));
+//     addr.sin_family = AF_INET;
+//     addr.sin_port = htons(port);
+//     addr.sin_addr.s_addr = inet_addr(ip.c_str());
+//     if (::connect(sock_, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+//         std::cerr << "GL860main: Connection failed to " << ip << ":" << port << std::endl;
+//         close(sock_);
+//         sock_ = -1;
+//         return false;
+//     }
+//     range_info_ =getRange();
+//     if (range_info_.empty()){
+//         std::cerr << "GL860main: range info is empty "<< std::endl;
+//     }
+//     return true;
+// }
 bool GL860main::initialize(const std::string& ip, int port) {
     sock_ = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_ < 0) {
-        std::cerr << "GL860: Failed to create socket. errno=" << errno << std::endl;
+        std::cerr << "GL860: Failed to create socket." << std::endl;
         return false;
     }
-    int opt = 1;
-    setsockopt(sock_, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
-    struct timeval tv;
-    tv.tv_sec = 2;
-    tv.tv_usec = 0;
-    setsockopt(sock_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+
+    // --- お手本 (SerialCommunication) に合わせた実装 ---
+
+    // 1. ソケットを非ブロッキングモードに設定（これで connect が待たなくなる）
+    int flags = fcntl(sock_, F_GETFL, 0);
+    if (fcntl(sock_, F_SETFL, flags | O_NONBLOCK) != 0) {
+        std::cerr << "GL860main: fcntl failed" << std::endl;
+        return false;
+    }
+
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = inet_addr(ip.c_str());
+
     if (::connect(sock_, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-        std::cerr << "GL860main: Connection failed to " << ip << ":" << port << std::endl;
-        close(sock_);
-        sock_ = -1;
-        return false;
+        if (errno == EINPROGRESS) {
+            // --- ここで最大1秒だけ「接続完了」を待つ ---
+            fd_set wset;
+            FD_ZERO(&wset);
+            FD_SET(sock_, &wset);
+
+            struct timeval tv;
+            tv.tv_sec = 1;  // 1秒待機
+            tv.tv_usec = 0;
+
+            // ソケットが書き込み可能になる（＝接続完了）のを待つ
+            int ret = select(sock_ + 1, NULL, &wset, NULL, &tv);
+            if (ret <= 0) { // タイムアウト(0) または エラー(-1)
+                std::cerr << "GL860main: Connect timeout or error." << std::endl;
+                close(sock_);
+                sock_ = -1;
+                return false;
+            }
+
+            // selectが成功しても、本当に繋がったか確認が必要
+            int so_error;
+            socklen_t len = sizeof(so_error);
+            getsockopt(sock_, SOL_SOCKET, SO_ERROR, &so_error, &len);
+            if (so_error != 0) {
+                std::cerr << "GL860main: Connect failed with error: " << so_error << std::endl;
+                close(sock_);
+                sock_ = -1;
+                return false;
+            }
+            // ここまで来れば接続成功！
+        } else {
+            std::cerr << "GL860main: Connect failed immediately." << std::endl;
+            close(sock_);
+            sock_ = -1;
+            return false;
+        }
     }
-    range_info_ =getRange();
-    if (range_info_.empty()){
-        std::cerr << "GL860main: range info is empty "<< std::endl;
-    }
+    fcntl(sock_, F_SETFL, flags);
+    int opt = 1;
+    setsockopt(sock_, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
+
+    range_info_ = getRange();
     return true;
 }
-
 void GL860main::finalize() {
     if (sock_ != -1) {
         close(sock_);

@@ -18,9 +18,9 @@ if [ "$_IP" ]; then
 fi
 
 echo hello
-echo hello > /home/grams/test_1.log
-/bin/zsh /home/grams/software/GRAMSBalloon/starter/starter.sh &
-echo byebye > /home/grams/test_2.log
+echo hello > /home/bacs/test_1.log
+/bin/zsh /home/bacs/balloon/starter/starter.sh &
+echo byebye > /home/bacs/test_2.log
 
 
 exit 0

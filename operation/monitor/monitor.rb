@@ -13,21 +13,22 @@ class MyApp < ANL::ANLApp
     chain Balloon::ReceiveTelemetry
     with_parameters(
           open_mode: 2, 
-          timeout_sec: 1.0, 
+          timeout_sec: 5.0, 
           save_command: true,
           num_command_per_file: 1000,
           # 地上系との通信手段の選択
-          communication_type: "socket", # "serial" or "socket"
-          serial_path: "/tmp/tty.serial",
-          OU_socket_serverIp:"192.168.10.101", #mac
+          communication_type: "serial", # "serial" or "socket"
+          serial_path: "/dev/tty.usbserial-BG03Q403",
+          baudrate:57600,
+          OU_socket_serverIp:"192.168.10.96", #mac
           OU_socket_port: 7070,
-          chatter: 1, 
+          chatter: 10, 
           binary_filename_base: "/Users/syn/balloon/data/telemetry/telemetry",
           ) do |m|
             m.set_singleton(1)
         end
     chain Balloon::InterpretTelemetry
-    with_parameters(save_telemetry: true, num_telem_per_file: 1000, chatter: 0, binary_filename_base: Dir.home + "/data/telemetry/telemetry")
+    with_parameters(save_telemetry: true, num_telem_per_file: 1000, chatter: 2, binary_filename_base: Dir.home + "/data/telemetry/telemetry")
     chain Balloon::PushToMongoDB
   end
   attr_accessor :serial_path

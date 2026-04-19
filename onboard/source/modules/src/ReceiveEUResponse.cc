@@ -179,8 +179,7 @@ int ReceiveEUResponse::interpretStruct(const  std::vector<uint8_t>& bynary_struc
 //     sendTelemetry_->getErrorManager()->setError(ErrorType::EC_RESERVE);
 //   }else{
 //     std::cout << "EC_ is other value: " << (int)EC_ << std::endl;
-//   }
-// }
+//   }}
 // void ReceiveEUResponse::inputOption(const ess3& option){
   
 // }

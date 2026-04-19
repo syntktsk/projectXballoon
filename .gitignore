@@ -1,0 +1,8 @@
+build/
+*.o
+*.d
+.DS_Store
+CMakeFiles/
+*.dylib
+*.bundle
+a.out

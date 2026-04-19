@@ -381,6 +381,8 @@ optional
 -
 
 /Users/syn/balloon/onboard/source/modules/include/eu_struct.hh
+ostream
+-
 
 /Users/syn/include/hsquicklook/MongoDBClient.hh
 memory

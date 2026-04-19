@@ -1,0 +1,9 @@
+digraph "Reading &amp; setting line values"
+{
+  edge [fontname="Helvetica",fontsize="10",labelfontname="Helvetica",labelfontsize="10"];
+  node [fontname="Helvetica",fontsize="10",shape=box];
+  rankdir=LR;
+  Node1 [label="Reading & setting line\l values",height=0.2,width=0.4,color="black", fillcolor="grey75", style="filled", fontcolor="black",tooltip="Functions allowing to read and set GPIO line values for single lines and in bulk."];
+  Node2 [label="GPIO line operations",height=0.2,width=0.4,color="black", fillcolor="white", style="filled",URL="$group__lines.html",tooltip="Functions and data structures dealing with GPIO lines."];
+  Node2->Node1 [shape=plaintext, dir="back", style="solid"];
+}

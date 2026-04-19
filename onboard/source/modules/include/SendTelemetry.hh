@@ -17,13 +17,13 @@
 #include "SocketTransceiver.hh"
 #include "ReceiveCommand.hh"
 #include "RunIDManager.hh"
-#include "GetRelayStatus.hh"
+#include "RelayControl.hh"
 #include "ReceiveEUResponse.hh"
 
 namespace balloon {
 
 class GetRaspiStatus;
-class GetRelayStatus;
+class RelayControl;
 class ReceiveCommand;
 class RunIDManager;
 class ReceiveEUResponse;
@@ -54,6 +54,7 @@ public:
   void inputStatusInfo();
   void inputEUInfo();
   void writeTelemetryToFile(bool failed);
+  void writeEUDataToFile(int id, bool append);
   void setTelemetryType(int v) { singleton_self()->telemetryType_ = v; }
   int TelemetryType() { return singleton_self()->telemetryType_; }
   ErrorManager* getErrorManager() { return (singleton_self()->errorManager_).get(); }
@@ -64,6 +65,7 @@ private:
   std::shared_ptr<ErrorManager> errorManager_ = nullptr;
   std::map<int, std::pair<int, int>> fileIDmp_;
   bool saveTelemetry_ = true;
+  std::vector<uint8_t> lastWholeTlm_;
   std::string binaryFilenameBase_ = "";
 
   int numTelemPerFile_ = 1000;
@@ -78,7 +80,7 @@ private:
   void inputOptionalInfo();
   // access to other classes
   GetRaspiStatus* getRaspiStatus_ = nullptr;
-  GetRelayStatus* getRelayStatus_ = nullptr;
+  RelayControl* relayControl_ = nullptr;
   ReceiveCommand* receiveCommand_ = nullptr;
   RunIDManager* runIDManager_ = nullptr;
   ReceiveEUResponse* receiveEUResponse_ = nullptr;
@@ -107,8 +109,10 @@ private:
   std::shared_ptr<SocketTransceiver> ou_;
   std::shared_ptr<SocketTransceiver> eu_;
   std::string serialPath_;
+  std::string savePath_;
   speed_t baudrate_ = B9600;
   mode_t openMode_ = O_RDWR;
+
 
 };
 

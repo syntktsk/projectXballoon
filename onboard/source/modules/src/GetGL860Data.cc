@@ -10,8 +10,8 @@ namespace balloon {
 GetGL860Data::GetGL860Data()
   : DataID_(0),
     currentFileID_(0),
+    filename_(""),
     lineCount_(0)
-    
 {
   GL860main_= std::make_shared<GL860main>();
 }
@@ -52,7 +52,7 @@ ANLStatus GetGL860Data::mod_define()
 
 ANLStatus GetGL860Data::mod_initialize()
 {
-  // std::cout << "DEBUG: GL860 initialize Start" << std::endl;
+  std::cout << "DEBUG: GL860 initialize Start" << std::endl;
   const std::string send_telem_md = "SendTelemetry";
   if (exist_module(send_telem_md)) {
     get_module_NC(send_telem_md, &sendTelemetry_);
@@ -62,17 +62,15 @@ ANLStatus GetGL860Data::mod_initialize()
   (void)a;
   range_info_ = GL860main_->RangeInfo();
   DataID_ = 0;
-  // std::cout << "DEBUG: GL860 initialize Finish" << std::endl;
+  std::cout << "DEBUG: GL860 initialize Finis h" << std::endl;
   return AS_OK;
 }
 
 ANLStatus GetGL860Data::mod_analyze()
 { 
-  std::cout << "DEBUG: GL860 analyze Start" << std::endl;
+  // std::cout << "DEBUG: GL860 analyze Start" << std::endl;
   DataID_++;
   RawData_ = GL860main_->sendAndReceive(":MEAS:OUTP:ONECSV?");
-  // RawData_ = GL860main_->RawData();
-  // std::cout << "DEBUG: これか" << std::endl;
   interpretGL860(RawData_); 
   // std::cout << "DEBUG: これか" << std::endl;
   writeDataToFile();
@@ -103,29 +101,25 @@ int GetGL860Data::getCapacity()
 }
 
 void GetGL860Data::interpretGL860(const std::string& data){
-  // std::cout << "DEBUG: start interpretGL860" << std::endl;
   std::vector<std::string> analog_vec;
-  // std::cout << "DEBUG: これか" << std::endl;
   getGL860Vec_.clear();
   analog_vec.clear();
   analog_vec = split(data , ',');
-  std::cout << "DEBUG: analog_vec is "<< analog_vec.size() << std::endl;
 
   if (analog_vec.empty()) {
-    std::cout << "DEBUG: analog_vec is empty, skipping..." << std::endl;
+    std::cout << "GetGL860Data:analog_vec is empty, skipping..." << std::endl;
     return; 
   }
-  uint8_t logic = 0;
+  // uint8_t logic = 0;
   int ch_count = 0;
-  // std::cout << "DEBUG: これか" << std::endl;
   for (const auto& item : analog_vec){
     if (item.empty()) continue;
-    // std::cout << "DEBUG: これか" << std::endl;
     if (item.find('/') != std::string::npos || item.find(':') != std::string::npos) {
-      // ファイル名に使えない文字 (/, :, スペース) を除去・置換する
-      std::string clean_time = item;
-      for (char &c : clean_time) {
-        if (c == '/' || c == ':' || c == ' ') c = '_';
+      std::string clean_time = ""; // 空の文字列を用意
+      for (char c : item) {
+        if (c >= '0' && c <= '9') {
+          clean_time += c;
+        }
       }
       glTimeStr_ = clean_time;
       continue;
@@ -167,27 +161,27 @@ void GetGL860Data::interpretGL860(const std::string& data){
   }
   // std::cout << "DEBUG: これか" << std::endl;
   getGL860Vec_.push_back(static_cast<int16_t>(alarm_out_packed));
-  // std::cout << "DEBUG: これか" << std::endl;
   getGL860Vec_.insert(getGL860Vec_ .begin(), static_cast<int16_t>(ch_count));
-  // std::cout << "DEBUG: interpretGL860 finished" << std::endl;
 }
 
 void GetGL860Data::writeDataToFile(){
-  if (lineCount_ >= numPerFile_) {
+  std::string time_stamp = glTimeStr_.empty() ? "NoTime" : glTimeStr_;
+  std::ostringstream run_id_sout;
+  run_id_sout << std::setfill('0') << std::right << std::setw(6) << DataID_;
+  if (lineCount_ >= numPerFile_||filename_.empty()) {
     currentFileID_++;
     lineCount_ = 0;
+    std::ostringstream file_id_sout;
+    file_id_sout << std::setfill('0') << std::right << std::setw(6) << currentFileID_;
+    filename_ = path_ + "/GL860_" + time_stamp + "_id" + file_id_sout.str() + ".csv";
   }
-  std::string time_stamp = glTimeStr_.empty() ? "NoTime" : glTimeStr_;
-  std::ostringstream run_id_sout, file_id_sout;
-  run_id_sout << std::setfill('0') << std::right << std::setw(6) << DataID_;
-  file_id_sout << std::setfill('0') << std::right << std::setw(6) << currentFileID_;
-  const std::string filename = path_ + "/GL860_" + run_id_sout.str() + "_"+ time_stamp + "_id" + file_id_sout.str() + ".csv";
-  std::ofstream ofs(filename, std::ios::app);
+  std::ofstream ofs(filename_, std::ios::app);
   if (ofs) {
-    ofs << RawData_ << "\n";
+    ofs << time_stamp <<","<< DataID_<<","<< RawData_ << "\n";
     lineCount_++; // 書き込んだらカウントアップ
   }  
 }
+
 } /* namespace balloon */
 
 
