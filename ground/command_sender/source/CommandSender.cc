@@ -10,13 +10,16 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <string.h> 
+#include <string.h>
+#include <sstream> 
+#include <iomanip>
+#include <cstdlib>
 
 #define BAUDRATE B1200
 
 #ifdef __APPLE__
 #define TCSETS TIOCSETA
-#define SERIAL_PORT "/dev/tty.usbserial-BG03Q92"
+#define SERIAL_PORT "/dev/tty.usbserial-FTRTKBUS"
 #else
 #define SERIAL_PORT "/dev/ttyAMA0"
 #endif
@@ -38,8 +41,8 @@ bool CommandSender::open_serial_port()
 {
   std::cout << "CommandSender: opening " << serial_port_ << std::endl;
 
-  int fd = open(serial_port_.c_str(), O_RDWR | O_NONBLOCK);
-  if (fd < 0) {
+  fd_ = open(serial_port_.c_str(), O_RDWR | O_NONBLOCK);
+  if (fd_ < 0) {
     std::cout << "CommandSender: open error" << std::endl;
     return false;
   }
@@ -56,14 +59,9 @@ bool CommandSender::open_serial_port()
   cfsetispeed(&tio_, BAUDRATE);
   cfsetospeed(&tio_, BAUDRATE);
   
-  tcsetattr(fd, TCSANOW, &tio_);
-  ioctl(fd, TCSETS, &tio_);
-  fcntl(fd, F_SETFL, O_RDWR); // reference: https://github.com/orbcode/orbuculum/issues/15
-
-  fd_ = fd;
-// 追加：ここを Python の timeout 設定と同じ「ブロッキングモード」にする
+  tcsetattr(fd_, TCSANOW, &tio_);
   int flags = fcntl(fd_, F_GETFL, 0);
-  fcntl(fd_, F_SETFL, flags & ~O_NONBLOCK); 
+  fcntl(fd_, F_SETFL, flags & ~O_NONBLOCK); // reference: https://github.com/orbcode/orbuculum/issues/15
   return true;
 }
 
@@ -72,16 +70,47 @@ void CommandSender::close_serial_port()
   close(fd_);
 }
 
+// int CommandSender::send(const std::vector<uint8_t>& byte_array)
+// {
+//   int rval = write(fd_, byte_array.data(), byte_array.size());
+//   std::vector<uint8_t> flush_data(128, 0xFF); 
+//   write(fd_, flush_data.data(), flush_data.size());
+//   tcdrain(fd_);
+//   usleep(300000); // 0.3秒あれば10バイトは絶対終わる
+//   std::cout << "[DEBUG] Pushed " << byte_array.size() << " bytes with garbage." << std::endl;
+//   return rval;
+// }
+
 int CommandSender::send(const std::vector<uint8_t>& byte_array)
 {
-  const int rval = write(fd_, &byte_array[0], byte_array.size());
-  tcdrain(fd_);/*78-80行追記したよ*/
-  tcflush(fd_, TCOFLUSH);
-  fsync(fd_);
-  usleep(500000);
-  return rval;
-}
+    tcflush(fd_, TCIFLUSH);
+    
+    // 1. 全てのデータを確実に16進数文字列に変換
+    std::stringstream ss;
+    for(auto b : byte_array) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(b);
+    }
+    std::string hex_str = ss.str();
 
+    // 2. Pythonの実行
+    std::string cmd = "python3 -c \"import serial,time; "
+                      "s=serial.Serial('/dev/cu.usbserial-FTRTKBUS', 1200); "
+                      "s.write(bytes.fromhex('" + hex_str + "')); "
+                      "s.flush(); time.sleep(0.5); s.close()\"";
+    
+    int result = system(cmd.c_str());
+
+    // --- 上の関数の仕様に合わせるための返り値調整 ---
+    if (result == 0) {
+        // Pythonが正常終了(0)なら、送ったサイズを返す
+        std::cout << "[DEBUG] Python bypass success: " << byte_array.size() << " bytes sent." << std::endl;
+        return static_cast<int>(byte_array.size());
+    } else {
+        // 何らかの理由でPythonが失敗したら、エラー(-1など)を返す
+        std::cerr << "[ERROR] Python bypass failed with status: " << result << std::endl;
+        return -1; 
+    }
+}
 bool CommandSender::open_socket() {
     if (sock_fd_ != -1) {
         std::cerr << "CommandSender:Already open." << std::endl;

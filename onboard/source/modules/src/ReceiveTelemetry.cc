@@ -33,7 +33,7 @@ ANLStatus ReceiveTelemetry::mod_define()
   // ソケット通信パラメータ
   define_parameter("OU_socket_serverIp", &mod_class::OU_serverIp_);
   define_parameter("OU_socket_port", &mod_class::OU_port_);
-  define_parameter("binary_filename_base", &mod_class::binaryFilenameBase_);
+  // define_parameter("binary_filename_base", &mod_class::binaryFilenameBase_);
   return AS_OK;
 }
 

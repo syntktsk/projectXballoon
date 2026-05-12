@@ -118,10 +118,10 @@ ANLStatus ReceiveCommand::mod_analyze()
   FD_ZERO(&fdset);
 
   /*追加したよ*/
-  struct termios t;
-  tcgetattr(sc_->FD(), &t);
-  speed_t speed = cfgetispeed(&t);
-  std::cout << "DEBUG: Actual speed of FD " << sc_->FD() << " is " << speed << " (B1200 is " << B1200 << ")" << std::endl;
+  // struct termios t;
+  // tcgetattr(sc_->FD(), &t);
+  // speed_t speed = cfgetispeed(&t);
+  // std::cout << "DEBUG: Actual speed of FD " << sc_->FD() << " is " << speed << " (B1200 is " << B1200 << ")" << std::endl;
 
   if (communicationType_ == "serial") {
     FD_SET(sc_->FD(), &fdset);
@@ -275,12 +275,14 @@ bool ReceiveCommand::applyCommand()
     }else {
     std::cout << "DEBUG : RelayControl module is dead(x _ x)."<<std::endl;
     }
+    return true;
   }
   if (code==108 &&  argc == 1){
     std::cout << "DEBUG : ReceiveCommand->"<< code << "," <<arguments[0]<<std::endl;
     if (relayControl_!=nullptr){
       relayControl_->RelayOff(std::stoi(arguments[0]));
     }
+    return true;
   }
   if (code==198 && argc==1) {
     if (shutdownSystem_!=nullptr) {
@@ -324,7 +326,7 @@ bool ReceiveCommand::applyCommand()
     // eu_ ->sendASCII(StringCommand_);
     // if(code == 300)
     std::cout << "save ess structure started. "<<std::endl;
-    if (rs0_ && rs1_ && rs2_) {
+    if (rs0_ && rs1_ && rs2_ && rs3_) {
       sendTelemetry_ -> writeEUDataToFile(code, true);
       std::cout << "create the save directry. "<<std::endl;
     } 
@@ -342,6 +344,11 @@ bool ReceiveCommand::applyCommand()
       sendTelemetry_ -> writeEUDataToFile(code, rs2_);
       rs2_ = true;
       std::cout << "save ess2 structure finished. "<<std::endl;
+    }
+    else if (code == 303) {
+      sendTelemetry_ -> writeEUDataToFile(code, rs3_);
+      rs3_ = true;
+      std::cout << "save ess3 structure finished. "<<std::endl;
     }
     
     return true;

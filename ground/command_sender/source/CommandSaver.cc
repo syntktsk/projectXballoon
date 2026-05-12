@@ -50,7 +50,8 @@ std::string get_time_stamp_str()
 
 std::string get_log_filename()
 {
-  const std::string run_id_filename = "/Users/projectX/settings/run_id/run_id.txt";
+  const std::string run_id_filename = "/Users/syn/balloon/data/run_id/run_id.txt";
+  const std::string log_dir = "/Users/syn/balloon/data/command/";
   std::ifstream ifs(run_id_filename);
   int run_id = 0;
   std::string time_stamp = "YYYYMMDDHHMMSS";
@@ -61,7 +62,7 @@ std::string get_log_filename()
   std::ostringstream run_id_sout;
   run_id_sout << std::setfill('0') << std::right << std::setw(6) << run_id;
   std::string run_id_str = run_id_sout.str();
-  std::string log_filename = "/Users/projectX/data/command/command_" + run_id_str + "_" + time_stamp + ".log";
+  std::string log_filename = log_dir + "command_" + run_id_str + "_" + time_stamp + ".log";
   return log_filename;
   
 }

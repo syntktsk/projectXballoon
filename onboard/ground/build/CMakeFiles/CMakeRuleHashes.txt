@@ -1,3 +1,0 @@
-# Hashes of file build rules.
-2c1fe445dd84ba785f6d98dbb2c5389e rubyext/CMakeFiles/Balloon.dir/BalloonRUBY.stamp
-bbc5cdc9ecb38136f6d8d24cdc6b8c69 rubyext/CMakeFiles/Balloon_swig_compilation

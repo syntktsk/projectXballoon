@@ -25,6 +25,7 @@ enum class TelemetryType {
   Relays = 4,
   Optional = 5,
   GL860 = 6,
+  Sensors = 7,
   Whole = 9,
 };
 
@@ -51,27 +52,27 @@ public:
   void generateTelemetryRelays();
   void generateTelemetryOption();
   void generateTelemetryGL860();
+  void generateTelemetrySensors();
 //   データ書き込むやつ。RTDは温度計で、環境データはGNSSとかかな今回の場合。CRCはコマンドちゃんと送れてるか数えるやつ
   void writeGL860value(std::vector<int16_t>& getGL860DataVec_);
   void writeGL860status(std::vector<uint8_t>& range_info_);
   void writeEnvironmentalData();
   void writeEUDataToFile(int id,bool app);
-  void writeEss();
-  void writeEr();
   void writeCRC16();
   void clear();
   void writeFile(const std::string& filename, bool append);
 
   bool setTelemetry(const std::vector<uint8_t>& v);//   バイナリをテレメトリにセットするやつ？らしい
   void interpret();//Setで受け取ったやつをそれぞれ構造体で解釈する関数
-  void interpretHK();
-  void interpretGL860option();
-  void interpretGL860stat();
-  void interpretElmo();
-  void interpretGNSS();
-  void interpretRelays();
-  void interpretWhole();
-  void interpretOption(int header_size);
+  int interpretHK(int header_size);
+  int interpretGL860option(int header_size);
+  int interpretGL860stat(int header_size);
+  int interpretElmo(int header_size);
+  int interpretGNSS(int header_size);
+  int interpretSensors(int header_size);
+  int interpretRelays(int header_size);
+  int interpretWhole(int header_size);
+  int interpretOption(int header_size);
 // おまじない
   template<typename T> void addValue(T input);
   template<typename T> void addVector(std::vector<T>& input);
@@ -133,10 +134,11 @@ public:
   void setLatitude(float v){ la_ = v; }
   void setLongitude(float v){ lo_ = v; }
   void setHeight(float v){ he_ = v; }
-  void setYaw(float v){ ya_ = v; }
+  void setYaw2(float v){ ya2_ = v; }
   void setPitch(float v){ pi_ = v; }
   void setRoll(float v){ ro_ = v; }
-  void setTemperature(float v){ te_ = v; }
+  void setTemperature2(float v){ te2_ = v; }
+  void setPressure2(float v){ te2_ = v; }
 
 // ForElmo　ここは変わる
   void setElmoData(const ess1& v) {elmo_status = v; }
@@ -163,6 +165,9 @@ public:
   void setAz(float v){ az_ = v; }
   void setHi(int32_t v){ hi_ = v; }
   void setEUlastcommand(std::string v){ lc_ = v;}
+  void setNumberOfCommand(int v){ nc_ = v;}
+
+  void setSensorsData(const ess3& v) {sensors_status = v; }
 
 // ninni no mojiretu
   void setOptionalStrings(std::string v){er_ = v;}
@@ -231,15 +236,26 @@ public:
   float az(){ return az_; }
   int32_t hi(){ return hi_; }
   std::string EUlastcommand(){return lc_;}
-
+  int16_t NumberOfCommand(){ return nc_; }
 // getter of GNSS
   float latitude(){ return la_; }
   float longitude(){ return lo_; }
   float height(){ return he_; }
-  float yaw(){ return ya_; }
+  float yaw2(){ return ya2_; }
   float pitch(){ return pi_; }
   float roll(){ return ro_; }
-  float temperature(){ return te_; }
+  float temperature2(){ return te2_; }
+  float pressure2(){ return pr2_; }
+  int16_t numberOfSequence(){ return ns_; }
+// ess3
+  float Temperature3() { return te3_; }
+  float humid()  { return hu_; }
+  float Pressure3() { return pr3_; }
+  float xAcce()  { return xa_; }
+  float yAcce() { return ya3_; }
+  float zAcce()  { return za_; }
+  float MagAtti()  { return ma_; }
+  float GyroAtti()  { return gy_; }
 
 // ninni no mojiretu
   std::string OptionalStrings(){return er_;}
@@ -249,9 +265,10 @@ public:
 
 private:
   std::vector<uint8_t> telemetry_;
-  const int hkSize_ = 40+4;
-  const int elmoSize_ = 83;
-  const int GNSSSize_ = 28;
+  const int hkSize_ = 16+40+4;
+  const int elmoSize_ = 85;
+  const int GNSSSize_ = 34;
+  const int sensorsSize_ = 32;
   const int optSize_ = 16;
   const int relaysSize_ = 4;
   const int gl860Size_ = 32*2;
@@ -329,19 +346,32 @@ private:
   float az_ = 0;
   uint32_t hi_ = 0;
   std::string lc_= "";
+  int16_t nc_ = 0;
 
   ess2 gnss_status;
   float la_ = 0;
   float lo_ = 0;  // longitude 経度 [deg]
   float he_ = 0;  // height    海抜高度 [m]
-  float ya_ = 0;  // yaw       機体のヨー角 [deg]
+  float ya2_= 0;  // yaw       機体のヨー角 [deg]
   float pi_ = 0;  // pitch     機体のピッチ角 [deg]
   float ro_ = 0;  // roll      機体のロール角 [deg]
-  float te_ = 0;  // temperature 気温 / センサ温度 [°C]
+  float te2_= 0;  // temperature 気温 / センサ温度 [°C]
+  float pr2_= 0;
+  int16_t   ns_ = 0;
+
+  ess3 sensors_status;
+  float te3_= 0;
+  float hu_ = 0;
+  float pr3_= 0;
+  float xa_ = 0;
+  float ya3_= 0;
+  float za_ = 0;
+  float ma_ = 0;
+  float gy_ = 0;
 
 // optional
   int header_size = 0;
-  std::string er_ = "THIS_IS_TEST";
+  std::string er_ = "THIS_IS_TEST?";
 //Relay
   uint32_t relay_ = 0;
 

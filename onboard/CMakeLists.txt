@@ -104,7 +104,7 @@ target_include_directories(${MY_LIBRARY} PUBLIC
 target_link_libraries(${MY_LIBRARY} PUBLIC
   -Wl,--no-as-needed
   /usr/lib/libpigpiod_if2.so
-  /home/syn/lib/libHSQuickLookAnalyzer.so
+  /home/bacs/lib/libHSQuickLookAnalyzer.so
   ${HSQUICKLOOK_LIB}
   ANLNext
   ${Boost_LIBRARIES}

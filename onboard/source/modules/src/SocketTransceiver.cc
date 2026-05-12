@@ -14,13 +14,13 @@
 
 namespace balloon{
 
-constexpr int ID_NONE = 255;
-constexpr int ID_Whole_TELEMETRY = 9;//私の考えが正しければこれが使われることはない
-constexpr int ID_HK_TELEMETRY = 1;
-constexpr int ID_GNSS_TELEMETRY = 2;
-constexpr int ID_Elmo_TELEMETRY = 3; // "ess" データ
-constexpr int ID_Relay_TELEMETRY = 4;
-constexpr int ID_ER_RESPONSE = 5;   // "er" データ
+// constexpr int ID_NONE = 255;
+// constexpr int ID_Whole_TELEMETRY = 9;//私の考えが正しければこれが使われることはない
+// constexpr int ID_HK_TELEMETRY = 1;
+// constexpr int ID_GNSS_TELEMETRY = 2;
+// constexpr int ID_Elmo_TELEMETRY = 3; // "ess" データ
+// constexpr int ID_Relay_TELEMETRY = 4;
+// constexpr int ID_ER_RESPONSE = 5;   // "er" データ
 constexpr int MAX_BUFFER_SIZE = 1500; // UDPパケットの最大サイズに合わせて適宜設定
 static const long RECEIVE_TIMEOUT_MS = 10;
 
@@ -191,102 +191,3 @@ int SocketTransceiver::receiveBinary() {
     return (int)bytes_read; 
 }
 } // namespace balloon
-
-// int SocketTransceiver::receiveTelemetry() {
-//     if (sock_fd_ < 0) {
-//         std::cerr << "Socket not open." << std::endl;
-//         return ID_NONE;
-//     }
-
-//     uint8_t buffer[MAX_BUFFER_SIZE];
-//     struct sockaddr_in sender_addr;
-//     socklen_t addr_len = sizeof(sender_addr);
-    
-//     // ソケットからデータを受け取る
-//     ssize_t bytes_read = ::recvfrom(
-//         sock_fd_, 
-//         buffer, 
-//         MAX_BUFFER_SIZE, 
-//         0, 
-//         (struct sockaddr*)&sender_addr, 
-//         &addr_len
-//     );
-
-//     if (bytes_read <= 0) {
-//         return ID_NONE; // タイムアウトやエラーでデータなし
-//     }
-
-//     last_received_raw_data_.assign(buffer, buffer + bytes_read);
-    
-//     const size_t received_size = (size_t)bytes_read;
-
-//     // -----------------------------------------------------------
-//     // 識別ロジック (サイズとマジックナンバーによる識別)
-//     // -----------------------------------------------------------
-
-//     // A. サイズによる識別（最優先）
-//     if (received_size == sizeof(ess0)) {
-        
-//         ess0 all_status;
-//         // バッファから構造体へコピー
-//         memcpy(&all_status, buffer, sizeof(ess1));
-//         std::cout << "-> Identified ESS Telemetry (ID: " << ID_Whole_TELEMETRY << ") " << std::endl;
-//         return ID_Whole_TELEMETRY; 
-
-//         // 2. 確からしいフィールドをチェック (MFフィールドを例とする)
-//         // **バイトオーダー変換を適用してから比較**
-//         // uint16_t version = ntohs(elmo_status.MF); 
-//         // if (version == 0xABCD) { // サーバー仕様で決まっている固定値
-//         //     std::cout << "-> Identified ESS Telemetry (ID: " << ID_Elmo_TELEMETRY << ") " << std::endl;
-//         //     return ID_Elmo_TELEMETRY; 
-//         // }
-
-//     }else if(received_size == sizeof(ess1)) {
-        
-//         ess1 elmo_status;
-//         // バッファから構造体へコピー
-//         memcpy(&elmo_status, buffer, sizeof(ess1));
-//         std::cout << "-> Identified ESS Telemetry (ID: " << ID_Elmo_TELEMETRY << ") " << std::endl;
-//         return ID_Elmo_TELEMETRY; 
-//         // 2. 確からしいフィールドをチェック (MFフィールドを例とする)
-//         // **バイトオーダー変換を適用してから比較**
-//         // uint16_t version = ntohs(elmo_status.MF); 
-//         // if (version == 0xABCD) { // サーバー仕様で決まっている固定値
-//         //     std::cout << "-> Identified ESS Telemetry (ID: " << ID_Elmo_TELEMETRY << ") " << std::endl;
-//         //     return ID_Elmo_TELEMETRY; 
-//         // }
-
-//     }else if (received_size == sizeof(ess2)) {
-        
-//         ess2 gnss_status;
-//         // バッファから構造体へコピー
-//         memcpy(&gnss_status, buffer, sizeof(ess2));
-//         std::cout << "-> Identified ESS Telemetry (ID: " << ID_GNSS_TELEMETRY << ") " << std::endl;
-//         return ID_GNSS_TELEMETRY;
-
-//         // 2. 確からしいフィールドをチェック (MFフィールドを例とする)
-//         // **バイトオーダー変換を適用してから比較**
-//         // uint16_t version = ntohs(gnss_status.MF); 
-//         // if (version == 0xABCD) { // サーバー仕様で決まっている固定値
-//         //     std::cout << "-> Identified ESS Telemetry (ID: " << ID_GNSS_TELEMETRY << ") " << std::endl;
-//         //     return ID_GNSS_TELEMETRY; 
-//         // }
-
-//     } else if (received_size == sizeof(er)) {
-        
-//         er optional_response;
-//         // バッファから構造体へコピー
-//         memcpy(&optional_response, buffer, sizeof(er));
-
-//         std::cout << "-> Identified ER Response (ID: " << ID_ER_RESPONSE << ") " << std::endl;
-//         return ID_ER_RESPONSE ; 
-//     }
-    
-//     // -----------------------------------------------------------
-//     // どのパターンにも一致しなかった場合
-//     // -----------------------------------------------------------
-//     std::cerr << "Unrecognized packet received (Size: " << received_size << " bytes)." << std::endl;
-//     return ID_NONE; // 識別失敗
-// }
-
-

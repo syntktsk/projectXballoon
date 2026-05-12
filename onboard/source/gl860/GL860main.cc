@@ -118,7 +118,6 @@ void GL860main::finalize() {
 
 std::string GL860main::sendAndReceive(std::string cmd) {
     if (sock_ < 0) return "";
-    // コマンドにGL860指定の改行コード
     cmd += "\r\n";
 
     ssize_t sent_len = send(sock_, cmd.c_str(), cmd.length(), 0);
@@ -127,6 +126,12 @@ std::string GL860main::sendAndReceive(std::string cmd) {
         return ""; 
     }
 
+    // ★ ここを追記：0.5秒の受信タイムアウトを設定
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 500000; // 0.5s
+    setsockopt(sock_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+
     std::string response = "";
     char buffer[BUFF_SIZE];
     while (true) {
@@ -134,8 +139,9 @@ std::string GL860main::sendAndReceive(std::string cmd) {
         ssize_t len = recv(sock_, buffer, BUFF_SIZE - 1, 0);
         
         if (len < 0) {
-            std::cerr << "GL860: Receive error (Timeout or Network error)." << std::endl;
-            return ""; // エラーを報告
+            // ★ ここを「no response」に変更（タイムアウト時はここに来る）
+            std::cerr << "GL860: Receive timeout (0.5s)." << std::endl;
+            return "no response"; 
         }
         if (len == 0) {
             std::cerr << "GL860: Connection closed by device." << std::endl;
@@ -143,12 +149,11 @@ std::string GL860main::sendAndReceive(std::string cmd) {
             return "";
         }
         response += std::string(buffer, len);       
-        // 改行コードで一つのレスポンス
         if (response.find('\n') != std::string::npos) {
             break;
         }
     }    
-    // 不要な改行コードを除去
+    
     size_t pos;
     while((pos = response.find_first_of("\r\n")) != std::string::npos) {
         response.erase(pos, 1);

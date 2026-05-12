@@ -91,6 +91,7 @@ private:
   bool rs0_ = false;
   bool rs1_ = false;
   bool rs2_ = false;
+  bool rs3_ = false;
   int timeoutSec_ = 2;
   constexpr static int bufferSize_ = 200;
   constexpr static int serialReadingTimems_ = 250;

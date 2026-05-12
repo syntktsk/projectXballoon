@@ -42,6 +42,7 @@ public:
   ess9 getWholeStatus() const { return last_all_status_; }
   ess1 getElmoStatus() const { return last_elmo_status_; }
   ess2 getGnssStatus() const { return last_gnss_status_; }
+  ess3 getSensorsStatus() const { return last_sensors_status_; }
   bool reserveData();
 
 // ninni no mojiretu
@@ -63,7 +64,10 @@ private:
   ess9 last_all_status_;
   ess1 last_elmo_status_;
   ess2 last_gnss_status_;
-  ess3 last_option_;
+  ess3 last_sensors_status_;
+  ess8 last_option_;
+
+  int chatter_;
 
 };
 }/*namespase balloon*/

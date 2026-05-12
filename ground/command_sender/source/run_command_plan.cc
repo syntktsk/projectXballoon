@@ -16,7 +16,8 @@
 #include <anlnext/CLIUtility.hh> // ANLNEXTフレームワークのCLI (コマンドラインインターフェース) ユーティリティ (ReadLineなど)
 #include "CommandSender.hh"    // コマンドをシリアルポートに送信するクラス
 #include "CommandBuilder.hh"   // コマンド名と引数からバイナリデータ（バイト配列）を構築するクラス
-#include "CommandSaver.hh"     // 送信履歴などを保存するクラス (ここでは未使用だが宣言あり)
+#include "CommandSaver.hh" 
+#define SERIAL_PORT "/dev/cu.usbserial-FTRTKBUS"
 
 using namespace balloon; 
 // 関数宣言
@@ -35,7 +36,7 @@ int main(int argc, char **argv)
 
   std::cout << "--- BACS Serial Communication Test (1200bps) ---" << std::endl;
   // 2. シリアルポートの初期化
-  sender.set_serial_port("/dev/cu.usbserial-BG03Q92N"); // cuデバイスを推奨
+  sender.set_serial_port(SERIAL_PORT);
   if (!sender.open_serial_port()) {
       std::cerr << "Failed to open serial port." << std::endl;
       return 1;
@@ -54,6 +55,7 @@ int main(int argc, char **argv)
   const std::vector<std::vector<std::string>> commands = read_command_plan(filename);
 
   run_command_sequence(commands, sender);
+
 
   return 0;
 }
@@ -173,7 +175,7 @@ void run_command_sequence(const std::vector<std::vector<std::string>>& commands,
   int run_index = 0; // 現在実行対象となっているコマンドの行番号 (インデックス)
   
   // 入力補完の候補を設定 (Tabキーで候補が表示される)
-  const std::vector<std::string> completion_candidate = {"send", "back", "skip", "exit", "goto"};
+  const std::vector<std::string> completion_candidate = {"send", "back", "skip", "exit", "num"};
   reader.set_completion_candidates(completion_candidate);
   
   // 無限ループ (ユーザーが exit するか、コマンドの終端に達するまで続く)
@@ -203,12 +205,16 @@ void run_command_sequence(const std::vector<std::vector<std::string>>& commands,
     std::cout << std::endl;
     const std::string line = reader.str(); // 入力された文字列を取得
     
-    // --- ユーザー入力の解析と処理 ---
-    
     if (line == "send") {
       // 'send' が入力された場合、現在のコマンドを実行
       send_command(commands, run_index, sender);
       // run_index++; // 実行後、次の行に進む
+      sender.close_serial_port();
+      sender.set_serial_port(SERIAL_PORT);
+      if (!sender.open_serial_port()) {
+          std::cerr << "Failed to open serial port." << std::endl;
+          break;
+      }
       continue;
     }
     else if (line == "exit") {
@@ -237,12 +243,12 @@ void run_command_sequence(const std::vector<std::vector<std::string>>& commands,
       }
       continue;
     }
-    else if (line == "goto") {
+    else if (!line.empty() && std::all_of(line.begin(), line.end(), ::isdigit)) {
       // 'goto' が入力された場合、行番号の入力を促す
-      std::cout << "Which line do you want to go?" << std::endl;
-      reader.read("INPUT> ");
-      const std::string destination_str = reader.str();
-      const int destination = std::stoi(destination_str); // 行番号を整数に変換
+      // std::cout << "Which line do you want to go?" << std::endl;
+      // reader.read("INPUT> ");
+      // const std::string destination_str = reader.str();
+      const int destination = std::stoi(line); // 行番号を整数に変換
       
       // 飛び先が不正な値でないかチェック
       if (destination >= commands.size() || destination < 0) {
@@ -318,8 +324,6 @@ void send_command(const std::vector<std::vector<std::string>> &commands, int run
           std::cout << "Ignoring file arguments. Input required." << std::endl;
       }
   }
-
-
   int current_args_count = args.size();
   
   if (current_args_count < required_args) {
@@ -345,7 +349,6 @@ void send_command(const std::vector<std::vector<std::string>> &commands, int run
   if (sender.CommunicationType() == 1){
     
     int rval = sender.send(command_bits);
-    
     if (rval != static_cast<int>(command_bits.size())) {
       std::cout << "Send Error" << std::endl;
     }
@@ -369,7 +372,6 @@ void send_command(const std::vector<std::vector<std::string>> &commands, int run
       std::cout << "Command " << commands[run_index][0] << " sent." << std::endl;
       write_command(command_bits, commands[run_index][0]); 
     }
-    // シリアルポートを閉じる
     sender.close_socket();
   }else{
     std::cout << "You should choose Communication Type" << std::endl;

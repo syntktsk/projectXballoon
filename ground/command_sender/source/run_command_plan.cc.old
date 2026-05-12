@@ -330,8 +330,8 @@ void send_command(const std::vector<std::vector<std::string>> &commands, int run
   
   CommandSender sender;
   if (sender.CommunicationType() == 1){
-    sender.set_serial_port("/dev/tty.usbserial-BG03Q92N");
-
+    sender.set_serial_port("/dev/tty.usbserial-FTRTKBUS");
+    usleep(1000000);
     if (!sender.open_serial_port()) {
       std::cout << "Serial port open error -> Skip" << std::endl;
       return; 
@@ -347,6 +347,7 @@ void send_command(const std::vector<std::vector<std::string>> &commands, int run
       write_command(command_bits, commands[run_index][0]); 
     }
     sender.close_serial_port();
+    usleep(1000000);
   }else if(sender.CommunicationType() == 2){
     
     if (!sender.open_socket()) {

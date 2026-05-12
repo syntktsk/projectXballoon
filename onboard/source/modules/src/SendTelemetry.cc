@@ -314,6 +314,9 @@ void SendTelemetry::inputEUInfo(){
   if (telemetryType_ == 2 || telemetryType_ == 9) {
     telemdef_->setGNSSData(receiveEUResponse_->getGnssStatus());
   }
+  if (telemetryType_ == 7 || telemetryType_ == 9) {
+    telemdef_->setSensorsData(receiveEUResponse_->getSensorsStatus());
+  }
 }
 
 void SendTelemetry::writeTelemetryToFile(bool failed)
@@ -329,6 +332,7 @@ void SendTelemetry::writeTelemetryToFile(bool failed)
   if (type==4) type_str = "Relays";
   if (type==5) type_str = "Option";
   if (type==6) type_str = "gl860";
+  if (type==7) type_str = "Sensors";
   if (type==9) type_str = "Whole";
   if (type==0) type_str = "failed";
 

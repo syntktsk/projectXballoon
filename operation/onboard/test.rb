@@ -13,12 +13,12 @@ class MyApp < ANL::ANLApp
         save_command: true,
         num_command_per_file: 1000,
         chatter: 10,
-        EU_socket_serverIp: "192.168.10.96", #Eu
+        EU_socket_serverIp: "192.168.88.3", #Eu
         EU_socket_port: 9998,
         communication_type: "serial", # "serial" or "socket"
         serial_path: "/dev/ttyAMA5",
         baudrate: 1200.to_i,
-        OU_socket_serverIp: "192.168.10.101", #Ou
+        OU_socket_serverIp: "192.168.88.249", #Ou
         OU_socket_port: 9090,
         binary_filename_base: "/home/bacs/data/command/command"
         ) do |m|
@@ -39,7 +39,8 @@ class MyApp < ANL::ANLApp
       with_parameters(
         path: "/home/bacs/data/telemetry/ras3", 
         chatter: 0,
-        gl860_ip:"192.168.1.100",
+        # gl860_ip:"192.168.1.100",
+        gl860_ip:"192.168.88.248",
         gl860_port:8023,
         num_per_file:1000
         ) do |m|
@@ -53,18 +54,18 @@ class MyApp < ANL::ANLApp
       end
       
       chain Balloon::RelayControl do |m|
-      with_parameters(gpio_list:[23, 24])
+      with_parameters(gpio_list:[22,23,24,27])
         m.set_singleton(0)
       end
 
       chain Balloon::SendTelemetry
       with_parameters(
-        EU_socket_serverIp:"192.168.10.96",#Eu
+        EU_socket_serverIp:"192.168.88.3",#Eu
         EU_socket_port: 9998,
         communication_type: "serial", #地上との通信手段 "serial" or "socket"
         serial_path: "/dev/ttyAMA2",
         baudrate: 57600,
-        OU_socket_serverIp:"192.168.96", #mac
+        OU_socket_serverIp:"192.168.88.246", #mac
         OU_socket_port: 7070,
         GL860_Data_names: ["GetGL860Data"],
         binary_filename_base: "/home/bacs/data/telemetry/telemetry",

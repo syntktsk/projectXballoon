@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
   }
 
   balloon::CommandSender sender;
-  sender.set_serial_port("/dev/cu.usbserial-BG03Q92N");
+  sender.set_serial_port("/dev/cu.usbserial-FTRTKBUS");
   if ( !sender.open_serial_port() ) {
     std::cout << "Serial port open error -> exit" << std::endl;
     return -1;

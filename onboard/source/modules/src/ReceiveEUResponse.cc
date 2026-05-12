@@ -16,7 +16,7 @@ constexpr int ID_Whole_TELEMETRY = 9;
 constexpr int ID_HK_TELEMETRY = 1;
 constexpr int ID_GNSS_TELEMETRY = 2;
 constexpr int ID_Elmo_TELEMETRY = 3; // "ess" データ
-constexpr int ID_Relay_TELEMETRY = 4;
+constexpr int ID_Sensors_TELEMETRY = 4;
 constexpr int ID_ER_RESPONSE = 5;   // "er" データ
 constexpr int MAX_BUFFER_SIZE = 1500; // UDPパケットの最大サイズに合わせて適宜設定
 static const long RECEIVE_TIMEOUT_MS = 500;
@@ -34,6 +34,7 @@ ReceiveEUResponse::~ReceiveEUResponse()=default;
 anlnext::ANLStatus ReceiveEUResponse::mod_define()
 {
   define_parameter("filepath", &mod_class::filepath_);
+  define_parameter("chatter", &mod_class::chatter_);
   return anlnext::AS_OK;
 }
 
@@ -71,29 +72,46 @@ int ReceiveEUResponse::interpretStruct(const  std::vector<uint8_t>& bynary_struc
   size_t WholeSize = sizeof(ess9);
   size_t ElmoSize = sizeof(ess1);
   size_t GNSSSize = sizeof(ess2);
-  size_t OptionSize = sizeof(ess3);
+  size_t SensorsSize = sizeof(ess3);
+  size_t OptionSize = sizeof(ess8);
 	// A. サイズによる識別（最優先）
   if (received_size == WholeSize) {
     // バッファから構造体へコピー
     memcpy(&last_all_status_, bynary_struct.data(), WholeSize);
     last_gnss_status_ = last_all_status_.gnss;
     last_elmo_status_ = last_all_status_.elmo;
-    std::cout << "-> Identified ESS Telemetry (ID: " << ID_Whole_TELEMETRY << ") " << std::endl;
+    last_sensors_status_ = last_all_status_.sensors;
+    if (chatter_ >= 1){
+      std::cout << "-> Identified ESS Telemetry (ID: " << ID_Whole_TELEMETRY << ") " << std::endl;
+    }
     id = ID_Whole_TELEMETRY; 
   }else if(received_size == ElmoSize){
     // バッファから構造体へコピー
     memcpy(&last_elmo_status_, bynary_struct.data(), ElmoSize);
-    std::cout << "-> Identified ESS Telemetry (ID: " << ID_Elmo_TELEMETRY << ") " << std::endl;
+    if (chatter_ >= 1){
+      std::cout << "-> Identified ESS Telemetry (ID: " << ID_Elmo_TELEMETRY << ") " << std::endl;
+    }
     id = ID_Elmo_TELEMETRY; 
   }else if (received_size == GNSSSize){
     // バッファから構造体へコピー
     memcpy(&last_gnss_status_, bynary_struct.data(), GNSSSize);
-    std::cout << "-> Identified ESS Telemetry (ID: " << ID_GNSS_TELEMETRY << ") " << std::endl;
+    if (chatter_ >= 1){
+      std::cout << "-> Identified ESS Telemetry (ID: " << ID_GNSS_TELEMETRY << ") " << std::endl;
+    }
     id = ID_GNSS_TELEMETRY;
+  } else if (received_size == SensorsSize){
+    // バッファから構造体へコピー
+    memcpy(&last_sensors_status_, bynary_struct.data(), SensorsSize);
+    if (chatter_ >= 1){
+      std::cout << "-> Identified ESS Telemetry (ID: " << ID_Sensors_TELEMETRY << ") " << std::endl;
+    }
+    id = ID_Sensors_TELEMETRY;
   } else if (received_size < OptionSize) {    
     // バッファから構造体へコピー
     memcpy(&last_option_, bynary_struct.data(), OptionSize);
-    std::cout << "-> Identified ER Response (ID: " << ID_ER_RESPONSE << ") " << std::endl;
+    if (chatter_ >= 1){
+      std::cout << "-> Identified ER Response (ID: " << ID_ER_RESPONSE << ") " << std::endl;
+    }
     er_ = last_option_.er;
     id = ID_ER_RESPONSE ; 
   }else{

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'anlnext'
-$LOAD_PATH.push('/Users/syn/balloon/onboard/ground/build/rubyext')
+$LOAD_PATH.push('/Users/syn/balloon/ground/build/rubyext')
 require 'Balloon'
 require 'HSQuickLook'
 
@@ -18,24 +18,24 @@ class MyApp < ANL::ANLApp
           num_command_per_file: 1000,
           # 地上系との通信手段の選択
           communication_type: "serial", # "serial" or "socket"
-          serial_path: "/dev/tty.usbserial-BG03Q403",
+          serial_path: "/dev/tty.usbserial-FTRTKATY",
           baudrate:57600,
           OU_socket_serverIp:"192.168.10.96", #mac
           OU_socket_port: 7070,
           chatter: 10, 
-          binary_filename_base: "/Users/syn/balloon/data/telemetry/telemetry",
+          # binary_filename_base: "/Users/syn/balloon/data/telemetry",
           ) do |m|
             m.set_singleton(1)
         end
     chain Balloon::InterpretTelemetry
-    with_parameters(save_telemetry: true, num_telem_per_file: 1000, chatter: 2, binary_filename_base: Dir.home + "/data/telemetry/telemetry")
+    with_parameters(save_telemetry: true, num_telem_per_file: 1000, chatter: 2, binary_filename_base: Dir.home + "/balloon/data/telemetry")
     chain Balloon::PushToMongoDB
   end
   attr_accessor :serial_path
 end
 
 def get_serial_path()
-  filename = Dir.home + "/settings/serial/telemetry_port.txt"
+  filename = Dir.home + "/balloon/data/serial/telemetry_port.txt"
   ret = ""
   File.open(filename, mode="rt") do |f|
     f.each_line do |line|

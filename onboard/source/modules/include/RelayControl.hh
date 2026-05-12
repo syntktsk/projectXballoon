@@ -45,7 +45,7 @@ private:
   int baudrate_ = 100000;
   int Flags_ = (1<<5) + (1<<6);
   const std::string portNumber_ = "8888";
-  std::vector<int> chipSelectArray_ = {22,23,24};/*pinの番号リスト*/
+  std::vector<int> chipSelectArray_ = {22,23,24,27};/*pinの番号リスト*/
   SendTelemetry* sendTelemetry_ = nullptr;
   int chatter_ = 0;
   uint32_t latestStatus_ = 0;

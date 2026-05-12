@@ -43,7 +43,7 @@ private:
   std::string serverIp_;
   int port_;
   size_t received_size_;
-  balloon::SendTelemetry* sendTelemetry_ = nullptr;
+  // balloon::SendTelemetry* sendTelemetry_ = nullptr;
 };
 
 } // namespace balloon

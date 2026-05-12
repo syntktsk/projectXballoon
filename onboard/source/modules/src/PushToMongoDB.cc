@@ -86,7 +86,7 @@ void PushToMongoDB::pushWholeTelemetry()
     auto section = bsoncxx::builder::stream::document{}
       << "Motor_OnOff"         << telemdef->MotorOnOff()
       << "Unit_Mode"            << telemdef->UnitMode()
-      << "Brale_OnOff"            << telemdef->OnOffBrake()
+      << "Brake_OnOff"            << telemdef->OnOffBrake()
       << "Motor_Fault"          << telemdef->MoterFault()
       << "Error_Code"           << telemdef->ErrorCode()
       << "Position_PX"          << telemdef->Position()
@@ -106,6 +106,7 @@ void PushToMongoDB::pushWholeTelemetry()
       << "en"                   << telemdef->en()
       << "az"                   << telemdef->az()
       << "hi"                   << telemdef->hi()
+      << "Number_Of_Command"    << telemdef->NumberOfCommand()
       << "last_command"         << telemdef->EUlastcommand()
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
@@ -116,10 +117,32 @@ void PushToMongoDB::pushWholeTelemetry()
       << "Latitude"             << telemdef->latitude()
       << "Longitude"            << telemdef->longitude()
       << "Height"               << telemdef->height()
-      << "Yaw"                  << telemdef->yaw()
+      << "Yaw"                  << telemdef->yaw2()
       << "Pitch"                << telemdef->pitch()
       << "Roll"                 << telemdef->roll()
-      << "Temperature"          << telemdef->temperature()
+      << "Temperature"          << telemdef->temperature2()
+      << "Pressure"             << telemdef->pressure2()
+      << "Number_Of_Sequence"   << telemdef->numberOfSequence()
+      << bsoncxx::builder::stream::finalize;
+    builder.addSection(section_name, section);
+  }
+  {
+    const std::string section_name = "bme280";
+    auto section = bsoncxx::builder::stream::document{}
+      << "Temperature"          << telemdef->Temperature3()
+      << "Humid"                << telemdef->humid()
+      << "Pressure"             << telemdef->Pressure3()
+      << bsoncxx::builder::stream::finalize;
+    builder.addSection(section_name, section);
+  }
+  {
+    const std::string section_name = "lsm9ds1";
+    auto section = bsoncxx::builder::stream::document{}
+      << "xAcce"                << telemdef->xAcce()
+      << "yAcce"                << telemdef->yAcce()
+      << "zAcce"                << telemdef->zAcce()
+      << "MagAtti"              << telemdef->MagAtti()
+      << "GyroAtti"             << telemdef->GyroAtti()
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
@@ -130,6 +153,16 @@ void PushToMongoDB::pushWholeTelemetry()
   //   << bsoncxx::builder::stream::finalize;
   //   builder.addSection(section_name, section);
   // }
+  {
+    const std::string section_name = "GPIO";
+    auto section = bsoncxx::builder::stream::document{}
+      << "GPIO_22" << (telemdef->RelaysStatus()[22])
+      << "GPIO_23" << (telemdef->RelaysStatus()[23])
+      << "GPIO_24" << (telemdef->RelaysStatus()[24])
+      // 必要なやつだけ抜き出しで
+    << bsoncxx::builder::stream::finalize;
+    builder.addSection(section_name, section);
+  }
   {
     const std::string section_name = "Software";
     auto section = bsoncxx::builder::stream::document{}
@@ -201,6 +234,7 @@ void PushToMongoDB::pushWholeTelemetry()
     auto section = section_stream << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
+
   auto doc = builder.generate();
   mongodbClient_->push("BACS", doc);
 }
@@ -273,6 +307,14 @@ void PushToMongoDB::pushHKTelemetry()
     builder.addSection(section_name, section);
   }
   {
+    const std::string section_name = "GL860";
+    auto section = bsoncxx::builder::stream::document{}
+      << "gl860_string"        << static_cast<std::string>(telemdef->GL860option())
+      << "gl860_lastCommand"   << static_cast<std::string>(telemdef->lastCommandGL860())
+    << bsoncxx::builder::stream::finalize;
+    builder.addSection(section_name, section);
+  }
+  {
     const std::string section_name = "Logic";
     auto section = bsoncxx::builder::stream::document{}
       << "logic1"               << telemdef->gl860logic()[0]
@@ -334,10 +376,10 @@ void PushToMongoDB::pushGNSSTelemetry()
       << "Latitude"             << telemdef->latitude()
       << "Longitude"            << telemdef->longitude()
       << "Height"               << telemdef->height()
-      << "Yaw"                  << telemdef->yaw()
+      << "Yaw"                  << telemdef->yaw2()
       << "Pitch"                << telemdef->pitch()
       << "Roll"                 << telemdef->roll()
-      << "Temperature"          << telemdef->temperature()
+      << "Temperature"          << telemdef->temperature2()
       << bsoncxx::builder::stream::finalize;
     builder.addSection(section_name, section);
   }
@@ -380,7 +422,7 @@ void PushToMongoDB::pushElmoTelemetry()
   {
     const std::string section_name = "Elmo_Status";
     auto section = bsoncxx::builder::stream::document{}
-      << "Motor_On/Off"         << telemdef->MotorOnOff()
+      << "Motor_OnOff"         << telemdef->MotorOnOff()
       << "Unit_Mode"            << telemdef->UnitMode()
       << "Motor_Fault"          << telemdef->MoterFault()
       << "Error_Code"           << telemdef->ErrorCode()
@@ -470,7 +512,7 @@ void PushToMongoDB::pushOptionalTelemetry()
 {
   TelemetryDefinition* telemdef = interpreter_->Telemdef();
 
-  hsquicklook::DocumentBuilder builder("Telemetry", "GPIO");
+  hsquicklook::DocumentBuilder builder("Telemetry", "Option");
   builder.setTI(telemdef->TimeNow().tv_sec*64 + telemdef->TimeNow().tv_usec*64*1E-6);
   builder.setTimeNow();
 
@@ -487,7 +529,7 @@ void PushToMongoDB::pushOptionalTelemetry()
     builder.addSection(section_name, section);
   }
   {
-    const std::string section_name = "Status";
+    const std::string section_name = "Option";
     auto section = bsoncxx::builder::stream::document{}
       << "er ="             << static_cast<std::string>(telemdef->OptionalStrings())
     << bsoncxx::builder::stream::finalize;
@@ -527,7 +569,7 @@ void PushToMongoDB::pushGL860OptionalTelemetry(){
     builder.addSection(section_name, section);
   }
   {
-    const std::string section_name = "Strings";
+    const std::string section_name = "GL860";
     auto section = bsoncxx::builder::stream::document{}
       << "gl860_string"        << static_cast<std::string>(telemdef->GL860option())
       << "gl860_lastCommand"   << static_cast<std::string>(telemdef->lastCommandGL860())

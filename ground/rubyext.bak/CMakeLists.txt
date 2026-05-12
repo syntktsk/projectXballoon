@@ -11,7 +11,7 @@ set(RUBY_EXT_LIBRARY_DIRS
   )
 set(RUBY_EXT_LIBRARIES
   ${ANLNEXT_LIB}
-  BACSMonitor
+  ProjectXBalloon
   )
 
 include_directories(${Boost_INCLUDE_DIRS}) #追加した

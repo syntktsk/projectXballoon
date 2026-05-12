@@ -33,7 +33,6 @@ bool CommandDefinition::setCommand(const std::vector<uint8_t>& v)
   }
 
   command_ = v;
-  uint16_t argc = getValue<uint16_t>(4);
 
   std::vector<uint8_t> com_without_footer;
   for (int i = 0; i < n - 4; i++) {

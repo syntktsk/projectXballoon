@@ -1,6 +1,7 @@
 #include "CommandBuilder.hh"
 #include <tuple>
-
+#include <sstream>
+#include <cstring>
 namespace
 {
 uint16_t crc_calc(std::vector<uint8_t> byte_array)
@@ -33,7 +34,7 @@ CommandBuilder::CommandBuilder()
   code_map_["Exec_Reboot"]             = CommandProperty{103, 0};
   code_map_["Prepare_Shutdown"]        = CommandProperty{104, 0};
   code_map_["Prepare_Reboot"]          = CommandProperty{105, 0};
-  code_map_["Get_Relay_Status"]        = CommandProperty{106, 99};
+  code_map_["Get_Relay_Status"]        = CommandProperty{106, 0};
   code_map_["GPIO_ON"]                 = CommandProperty{107, 1};
   code_map_["GPIO_OFF"]                = CommandProperty{108, 1};
   code_map_["Exec_Software_Stop"]      = CommandProperty{198, 0};
@@ -41,9 +42,11 @@ CommandBuilder::CommandBuilder()
   code_map_["ac"]                      = CommandProperty{200, 1};
   code_map_["acex"]                    = CommandProperty{298, 0};
   code_map_["BG"]                      = CommandProperty{299, 0};
-  code_map_["rs0:Get_All"]          = CommandProperty{300, 99};
-  code_map_["rs2:Get_GNSS"]         = CommandProperty{302, 99};
-  code_map_["rs1:Get_Elmo"]         = CommandProperty{301, 99};
+  code_map_["rs0:Get_All"]          = CommandProperty{300, 0};
+  code_map_["rs1:Get_Elmo"]         = CommandProperty{301, 0};
+  code_map_["rs2:Get_GNSS"]         = CommandProperty{302, 0};
+  code_map_["rs3:Get_Sensors"]         = CommandProperty{303, 0};
+  code_map_["rs9:Write_All"]         = CommandProperty{304, 0};
   code_map_["Parameter_Set"]    = CommandProperty{400, 0};
   code_map_["TC_set"]           = CommandProperty{501, 1};
   code_map_["JV_set"]           = CommandProperty{502, 1};
@@ -104,14 +107,22 @@ std::vector<uint8_t> CommandBuilder::make_byte_array(const std::string& name, co
   if (argnum == 99){
     //保存の方法考えるよ
   }else if (argnum > 0) {
-    // 必要なサイズを16バイトに定義
-    const size_t REQUIRED_SIZE = 16; 
-
+    // 必要なサイズをコマンドに依って定義
+    size_t REQUIRED_SIZE= 16;
+    // ;
+    // if(code % 100 == 99){
+    // REQUIRED_SIZE = 16; 
+    // }else{
+    // REQUIRED_SIZE = 2;
+    // }
     // 最初の引数 (statusgetterelmo) を取得
     const std::string& arg = arg_array[0]; 
-
+    if (arg.empty()){
+      // std::cout<< "arg is empty."<< std::endl;
+      throw CommandException("Argument is empty");
+    }
     if (arg.size() > REQUIRED_SIZE) {
-        throw CommandException("Argument size exceeds 16 bytes");
+        throw CommandException("Argument size exceeds assumption");
     }
     // --- 文字列をバイト列に変換 ---
     for (char c : arg) {

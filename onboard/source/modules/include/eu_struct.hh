@@ -8,7 +8,7 @@
 #pragma once//一度だけ読み込む
 #include <ostream>
 // Elmoドライバ用構造体 4Bytes * 18 = 72Bytes
-typedef struct {
+typedef struct ess1 {
     int   MO = 1;   // Motor On/OFF 状態 (1=モーター有効, 0=無効)
     int   UM = 0;   // Unit Mode = 0,1,2,5
     int   OB = 1;
@@ -24,19 +24,19 @@ typedef struct {
     float TC = 1.45f;   // Torque Command 指令トルク値
     float JV = 2.21f;   // Jog Velocity 指令速度（Jog運転時）
     int   PA = 43256;   // Position Abusolute 絶対位置指令
-    int   PR = 13;   // Position Relative 相対位置指令値
-    int   ac = 20;   // mode flag 運転モード番号 (0~21)
+    int   PR = 23453;   // Position Relative 相対位置指令値
+    int   ac = 7;   // mode flag 運転モード番号 (0~21)
     int   ef = 0;   // enable flag 回転可能かどうか (0=回転不可, 1=回転可能)
-    int   ps = 5;   // parameter set 使用中のパラメータセット番号
-    int   en = 1;
-    float az = 32.5f;
-    int   hi = 245;
+    int   ps = 6;   // parameter set 使用中のパラメータセット番号
+    int   en = 23;
+    float az = 3.5f;
+    int   hi = 2;
     char lc[16] = "THIS_IS_TEST";
-    int nc = 0;
+    int16_t nc = 12345;
 } ess1;
 
 // GNSSコンパス用構造体 4Bytes * 7 = 28Bytes
-typedef struct {
+typedef struct ess2{
     float la = 1;  // latitude  緯度 [deg]
     float lo = 2;  // longitude 経度 [deg]
     float he = 3;  // height    海抜高度 [m]
@@ -45,10 +45,10 @@ typedef struct {
     float ro = 6;  // roll      機体のロール角 [deg]
     float te = 7;  // temperature 気温 / センサ温度 [°C]
     float pr = 8;
-    int   ns = 9;
+    int16_t   ns = 12;
 } ess2;
 
-typedef struct{
+typedef struct ess3 {
     float te = 1;
     float hu = 2;
     float pr = 3;
@@ -59,13 +59,14 @@ typedef struct{
     float gy = 8;
 }ess3;
 
-typedef struct {
+typedef struct ess8 {
     char er[16] = "THIS_IS_TEST";
 } ess8;
 
-typedef struct {
+typedef struct ess9 {
     ess2 gnss;  // GNSSデータ一式 (28Bytes)
     ess1 elmo;  // Elmoデータ一式 (72Bytes)
+    ess3 sensors;
 } ess9;
 // ess1 (Elmo) 用の出力ルール
 inline std::ostream& operator<<(std::ostream& os, const ess1& s) {
@@ -73,17 +74,19 @@ inline std::ostream& operator<<(std::ostream& os, const ess1& s) {
        << s.PX << "," << s.VX << "," << s.IQ << "," << s.ID << ","
        << s.MC << "," << s.BV << "," << s.TI << "," << s.TC << ","
        << s.JV << "," << s.PA << "," << s.PR << "," << s.ac << ","
-       << s.ef << "," << s.ps << "," << s.en << "," << s.az << ","<< s.hi << ","<< s.lc;
+       << s.ef << "," << s.ps << "," << s.en << "," << s.az << ","<< s.hi << ","<< s.lc << ","<< s.nc;
     return os;
 }
 
 // ess2 (GNSS) 用の出力ルール
 inline std::ostream& operator<<(std::ostream& os, const ess2& s) {
     os << s.la << "," << s.lo << "," << s.he << "," << s.ya << ","
-       << s.pi << "," << s.ro << "," << s.te;
+       << s.pi << "," << s.ro << "," << s.te << ","<< s.pr << ","<<  s.ns;
     return os;
 }
-
+inline std::ostream& operator<<(std::ostream& os, const ess3& s) {
+    os << s.te << "," << s.hu << "," << s.pr << "," << s.xa << "," << s.ya << "," << s.za << "," << s.ma << "," << s.gy;
+}
 // ess9 (Whole) 用の出力ルール
 inline std::ostream& operator<<(std::ostream& os, const ess9& s) {
     // 内部のgnssとelmoのルールを再利用する
